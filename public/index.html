@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pay-for-Performance — PayPal Settlement Platform</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%20%220%22%20%22100%22%20%22100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #151c2e;
+      --card-border: #263352;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --accent: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --code-bg: #080c14;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .brand h1 { font-size: 22px; font-weight: 700; }
+    .brand p { font-size: 13px; color: var(--text-muted); }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: #10b98120;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid #10b98140;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+    .demo-banner {
+      background: linear-gradient(90deg, #1e293b, #0f172a);
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary);
+      padding: 16px 20px;
+      border-radius: 10px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .demo-banner h2 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .demo-banner p { font-size: 13px; color: var(--text-muted); }
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      color: #cbd5e1;
+    }
+    .flow-step-tag {
+      background: #2563eb30;
+      color: #60a5fa;
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid #3b82f640;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .step-number {
+      background: var(--primary);
+      color: white;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    input, select {
+      width: 100%;
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, select:focus {
+      border-color: var(--primary);
+    }
+    .row {
+      display: flex;
+      gap: 12px;
+    }
+    .row > div { flex: 1; }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 11px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      width: 100%;
+    }
+    button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-success { background: #059669; }
+    .btn-success:hover { background: #047857; }
+    .btn-warning { background: #d97706; }
+    .btn-warning:hover { background: #b45309; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+    }
+    .btn-outline:hover { background: #1e293b; }
+    .btn-paypal {
+      background: #0070ba;
+      font-weight: 700;
+    }
+    .btn-paypal:hover { background: #005ea6; }
+    .result-box {
+      background: var(--code-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-top: 14px;
+      font-family: monospace;
+      font-size: 12px;
+      color: #93c5fd;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .stat-card {
+      background: #0d1322;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+    }
+    .stat-title { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+    .stat-val { font-size: 24px; font-weight: 700; margin-top: 4px; color: white; }
+    .log-item {
+      padding: 10px 0;
+      border-bottom: 1px solid #1e293b;
+      font-size: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .log-item:last-child { border-bottom: none; }
+    .log-action { font-weight: 600; color: #60a5fa; }
+    .log-time { font-size: 11px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <h1>Pay-for-Performance</h1>
+          <p>AI-Powered SLA Payment Settlement & PayPal Integration Module</p>
+        </div>
+      </div>
+      <div>
+        <div class="status-badge" id="serviceStatus">
+          <span class="status-dot"></span>
+          PayPal Sandbox Connected
+        </div>
+      </div>
+    </header>
+
+    <div class="demo-banner">
+      <div>
+        <h2>Core Demo Flow</h2>
+        <p>Deterministic SLA payment settlement with automated contract credit calculation</p>
+      </div>
+      <div class="flow-steps">
+        <span class="flow-step-tag">$100 Authorized</span> ➔
+        <span class="flow-step-tag">$25 SLA Credit</span> ➔
+        <span class="flow-step-tag">$75 Approved Capture</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Left Column: Operations -->
+      <div>
+        <!-- Step 1: Create Order -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="step-number">1</span>
+              Create Payment Order (intent=AUTHORIZE)
+            </div>
+          </div>
+          <div class="row">
+            <div class="form-group">
+              <label>Amount ($)</label>
+              <input type="number" id="orderAmount" value="100.00" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Currency</label>
+              <input type="text" id="orderCurrency" value="USD" readonly>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Contract Description</label>
+            <input type="text" id="orderDescription" value="SLA Cloud Hosting Contract #SC-2024-001">
+          </div>
+          <button id="btnCreateOrder" onclick="createOrder()">
+            Create $100.00 Order
+          </button>
+          <div id="step1Result" class="result-box" style="display: none;"></div>
+          <div id="paypalActionArea" style="display: none; margin-top: 12px;">
+            <a id="paypalApproveLink" href="#" target="_blank" style="text-decoration: none;">
+              <button class="btn-paypal">
+                👉 Click to Approve in PayPal Sandbox
+              </button>
+            </a>
+          </div>
+        </div>
+
+        <!-- Step 2: Authorize Payment -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="step-number">2</span>
+              Authorize Payment Hold
+            </div>
+          </div>
+          <div class="form-group">
+            <label>PayPal Order ID</label>
+            <input type="text" id="authOrderId" placeholder="Populated automatically after Step 1">
+          </div>
+          <button id="btnAuthorize" onclick="authorizeOrder()" class="btn-warning">
+            Authorize Payment ($100 Hold)
+          </button>
+          <div id="step2Result" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Step 3: Person 3 SLA Settlement Intake -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="step-number">3</span>
+              Person 3: SLA Engine Credit Calculation
+            </div>
+          </div>
+          <div class="row">
+            <div class="form-group">
+              <label>Authorized ($)</label>
+              <input type="text" id="settleAuth" value="100.00" readonly>
+            </div>
+            <div class="form-group">
+              <label>SLA Credit ($)</label>
+              <input type="text" id="settleCredit" value="25.00">
+            </div>
+            <div class="form-group">
+              <label>Approved Capture ($)</label>
+              <input type="text" id="settleCapture" value="75.00" readonly>
+            </div>
+          </div>
+          <button onclick="stageSettlement()" class="btn-outline">
+            Stage Approved Settlement Contract
+          </button>
+          <div id="step3Result" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Step 4: Capture Settlement -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="step-number">4</span>
+              Execute Capture for Approved Settlement
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Payment ID</label>
+            <input type="text" id="capturePaymentId" placeholder="e.g. PAY-1730...">
+          </div>
+          <div class="form-group">
+            <label>Settlement ID</label>
+            <input type="text" id="captureSettlementId" value="SET-001">
+          </div>
+          <button onclick="captureSettlement()" class="btn-success">
+            Capture $75 Approved Settlement (final_capture: true)
+          </button>
+          <div id="step4Result" class="result-box" style="display: none;"></div>
+        </div>
+
+        <!-- Step 5: Partial Refund -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="step-number">5</span>
+              Post-Capture Partial Refund
+            </div>
+          </div>
+          <div class="row">
+            <div class="form-group">
+              <label>Refund Amount ($)</label>
+              <input type="number" id="refundAmount" value="25.00" step="0.01">
+            </div>
+            <div class="form-group">
+              <label>Reason</label>
+              <input type="text" id="refundReason" value="Secondary SLA concession credit">
+            </div>
+          </div>
+          <button onclick="refundPayment()" class="btn-outline">
+            Execute Partial Refund ($25)
+          </button>
+          <div id="step5Result" class="result-box" style="display: none;"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Payment State & Audit Log -->
+      <div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📊 Live Payment Status</div>
+            <button onclick="refreshStatus()" class="btn-outline" style="width: auto; padding: 4px 10px; font-size: 12px;">Refresh</button>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Current Status</div>
+            <div class="stat-val" id="statStatus" style="color: #60a5fa;">IDLE</div>
+          </div>
+          <div class="row">
+            <div class="stat-card">
+              <div class="stat-title">Authorized</div>
+              <div class="stat-val" id="statAuthorized">$0.00</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-title">Captured</div>
+              <div class="stat-val" id="statCaptured" style="color: #34d399;">$0.00</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">Refunded</div>
+            <div class="stat-val" id="statRefunded" style="color: #f87171;">$0.00</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">📜 Audit Trail & Events</div>
+          </div>
+          <div id="auditLogList" style="max-height: 400px; overflow-y: auto;">
+            <div style="color: var(--text-muted); font-size: 13px;">No actions recorded yet. Create an order to begin.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activePaymentId = '';
+    let activeOrderId = '';
+    let activeSettlementId = 'SET-' + Date.now().toString().slice(-4);
+
+    document.getElementById('captureSettlementId').value = activeSettlementId;
+
+    document.getElementById('settleCredit').addEventListener('input', (e) => {
+      const auth = parseFloat(document.getElementById('settleAuth').value) || 100;
+      const credit = parseFloat(e.target.value) || 0;
+      document.getElementById('settleCapture').value = Math.max(0, (auth - credit)).toFixed(2);
+    });
+
+    async function createOrder() {
+      const btn = document.getElementById('btnCreateOrder');
+      btn.disabled = true;
+      btn.innerText = 'Creating PayPal Order...';
+      try {
+        const res = await fetch('/api/payments/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: parseFloat(document.getElementById('orderAmount').value),
+            currency: document.getElementById('orderCurrency').value,
+            description: document.getElementById('orderDescription').value,
+          })
+        });
+        const data = await res.json();
+        const box = document.getElementById('step1Result');
+        box.style.display = 'block';
+        box.innerText = JSON.stringify(data, null, 2);
+
+        if (data.success && data.data) {
+          activePaymentId = data.data.paymentId;
+          activeOrderId = data.data.orderId;
+          document.getElementById('authOrderId').value = activeOrderId;
+          document.getElementById('capturePaymentId').value = activePaymentId;
+
+          if (data.data.approvalUrl) {
+            document.getElementById('paypalApproveLink').href = data.data.approvalUrl;
+            document.getElementById('paypalActionArea').style.display = 'block';
+          }
+          await refreshStatus();
+        }
+      } catch (err) {
+        alert('Order creation failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Create $100.00 Order';
+      }
+    }
+
+    async function authorizeOrder() {
+      const orderId = document.getElementById('authOrderId').value;
+      if (!orderId) return alert('Please enter or create an order first.');
+      const btn = document.getElementById('btnAuthorize');
+      btn.disabled = true;
+      btn.innerText = 'Authorizing...';
+      try {
+        const res = await fetch(`/api/payments/${orderId}/authorize`, { method: 'POST' });
+        const data = await res.json();
+        const box = document.getElementById('step2Result');
+        box.style.display = 'block';
+        box.innerText = JSON.stringify(data, null, 2);
+        await refreshStatus();
+      } catch (err) {
+        alert('Authorization failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Authorize Payment ($100 Hold)';
+      }
+    }
+
+    async function stageSettlement() {
+      const paymentId = activePaymentId || document.getElementById('capturePaymentId').value;
+      if (!paymentId) return alert('Payment ID is required.');
+      const settlementId = document.getElementById('captureSettlementId').value;
+      const auth = document.getElementById('settleAuth').value;
+      const credit = document.getElementById('settleCredit').value;
+      const capture = document.getElementById('settleCapture').value;
+
+      try {
+        const res = await fetch('/api/settlements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            settlementId,
+            paymentId,
+            authorizedAmount: auth,
+            creditAmount: credit,
+            captureAmount: capture,
+            currency: 'USD',
+            decision: 'APPROVED',
+            approvedBy: 'sla-engine-person-3'
+          })
+        });
+        const data = await res.json();
+        const box = document.getElementById('step3Result');
+        box.style.display = 'block';
+        box.innerText = JSON.stringify(data, null, 2);
+        await refreshStatus();
+      } catch (err) {
+        alert('Failed to stage settlement: ' + err.message);
+      }
+    }
+
+    async function captureSettlement() {
+      const paymentId = activePaymentId || document.getElementById('capturePaymentId').value;
+      const settlementId = document.getElementById('captureSettlementId').value;
+      if (!paymentId || !settlementId) return alert('Payment ID and Settlement ID are required.');
+
+      try {
+        const res = await fetch(`/api/payments/${paymentId}/capture`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ settlementId })
+        });
+        const data = await res.json();
+        const box = document.getElementById('step4Result');
+        box.style.display = 'block';
+        box.innerText = JSON.stringify(data, null, 2);
+        await refreshStatus();
+      } catch (err) {
+        alert('Capture failed: ' + err.message);
+      }
+    }
+
+    async function refundPayment() {
+      const paymentId = activePaymentId || document.getElementById('capturePaymentId').value;
+      const amount = parseFloat(document.getElementById('refundAmount').value);
+      const reason = document.getElementById('refundReason').value;
+
+      try {
+        const res = await fetch(`/api/payments/${paymentId}/refund`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount, reason })
+        });
+        const data = await res.json();
+        const box = document.getElementById('step5Result');
+        box.style.display = 'block';
+        box.innerText = JSON.stringify(data, null, 2);
+        await refreshStatus();
+      } catch (err) {
+        alert('Refund failed: ' + err.message);
+      }
+    }
+
+    async function refreshStatus() {
+      const paymentId = activePaymentId || document.getElementById('capturePaymentId').value;
+      if (!paymentId) return;
+
+      try {
+        const res = await fetch(`/api/payments/${paymentId}`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          const p = data.data.payment;
+          document.getElementById('statStatus').innerText = p.status;
+          document.getElementById('statAuthorized').innerText = `$${p.authorizedAmount.toFixed(2)}`;
+          document.getElementById('statCaptured').innerText = `$${p.capturedAmount.toFixed(2)}`;
+          document.getElementById('statRefunded').innerText = `$${p.refundedAmount.toFixed(2)}`;
+
+          // Render audit logs
+          const logList = document.getElementById('auditLogList');
+          if (data.data.auditLogs && data.data.auditLogs.length > 0) {
+            logList.innerHTML = data.data.auditLogs.slice().reverse().map(l => `
+              <div class="log-item">
+                <span class="log-action">${l.action}</span>
+                <span class="log-time">${new Date(l.createdAt).toLocaleTimeString()} &bull; ${l.id}</span>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (err) {
+        console.error('Refresh failed', err);
+      }
+    }
+  </script>
+</body>
+</html>

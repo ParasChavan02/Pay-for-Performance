@@ -1,0 +1,282 @@
+{
+  "info": {
+    "_postman_id": "c62a84d4-28ab-4351-93c6-e91b5c1d49f0",
+    "name": "Pay-for-Performance PayPal API Collection",
+    "description": "Production-grade PayPal Integration & SLA Settlement Collection for Pay-for-Performance.\nCore Flow: $100 Authorized → $25 SLA Credit Calculated → $75 Approved → $75 Captured via PayPal Sandbox.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "paymentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "settlementId",
+      "value": "SET-001",
+      "type": "string"
+    },
+    {
+      "key": "authorizationId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "captureId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        },
+        "description": "Verify that the service is running and healthy."
+      },
+      "response": []
+    },
+    {
+      "name": "1. Create Order ($100 Authorized Intent)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.success && jsonData.data) {",
+              "    pm.collectionVariables.set('paymentId', jsonData.data.paymentId);",
+              "    pm.collectionVariables.set('orderId', jsonData.data.orderId);",
+              "    console.log('Payment ID set:', jsonData.data.paymentId);",
+              "    console.log('Order ID set:', jsonData.data.orderId);",
+              "    console.log('Buyer Approval URL:', jsonData.data.approvalUrl);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "create-order-{{$timestamp}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 100.00,\n  \"currency\": \"USD\",\n  \"description\": \"SLA Performance Contract #SC-2024-001\",\n  \"metadata\": {\n    \"contractId\": \"SC-2024-001\",\n    \"client\": \"Acme Corp\",\n    \"slaTarget\": \"99.9% uptime\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/create-order",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "payments", "create-order"]
+        },
+        "description": "Creates a $100 PayPal Order with intent=AUTHORIZE. Returns approvalUrl for buyer authorization."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Authorize Order (Post Buyer Approval)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.success && jsonData.data) {",
+              "    pm.collectionVariables.set('authorizationId', jsonData.data.authorizationId);",
+              "    console.log('Authorization ID set:', jsonData.data.authorizationId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{orderId}}/authorize",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "payments", "{{orderId}}", "authorize"]
+        },
+        "description": "Authorizes the order after buyer logs into PayPal Sandbox and approves the authorization hold."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Stage SLA Settlement (Person 3 Engine Intake)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.success && jsonData.data) {",
+              "    pm.collectionVariables.set('settlementId', jsonData.data.settlementId);",
+              "    console.log('Settlement Staged:', jsonData.data.settlementId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"settlementId\": \"SET-{{$timestamp}}\",\n  \"paymentId\": \"{{paymentId}}\",\n  \"authorizedAmount\": \"100.00\",\n  \"creditAmount\": \"25.00\",\n  \"captureAmount\": \"75.00\",\n  \"currency\": \"USD\",\n  \"decision\": \"APPROVED\",\n  \"approvedBy\": \"sla-engine-person-3\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/settlements",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "settlements"]
+        },
+        "description": "Simulates Person 3's SLA calculation contract: $100 authorized - $25 credit = $75 approved capture."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Capture Approved Settlement ($75 Final Capture)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.success && jsonData.data && jsonData.data.capture) {",
+              "    pm.collectionVariables.set('captureId', jsonData.data.capture.paypalCaptureId);",
+              "    console.log('Capture ID set:', jsonData.data.capture.paypalCaptureId);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "capture-{{settlementId}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"settlementId\": \"{{settlementId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{paymentId}}/capture",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "payments", "{{paymentId}}", "capture"]
+        },
+        "description": "Executes PayPal capture for the approved settlement amount ($75). Releases the remaining $25 hold back to the client."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Partial Refund ($25 Adjustment)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Idempotency-Key",
+            "value": "refund-{{$timestamp}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 25.00,\n  \"captureId\": \"{{captureId}}\",\n  \"reason\": \"Post-settlement SLA credit adjustment\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{paymentId}}/refund",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "payments", "{{paymentId}}", "refund"]
+        },
+        "description": "Refunds a partial amount from the captured payment."
+      },
+      "response": []
+    },
+    {
+      "name": "6. Get Payment Status & Audit Trail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{paymentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "payments", "{{paymentId}}"]
+        },
+        "description": "Retrieves comprehensive payment details, captures, settlements, refunds, and chronological audit trail."
+      },
+      "response": []
+    },
+    {
+      "name": "7. Negative Test: Reject Duplicate Settlement Execution",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"settlementId\": \"{{settlementId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{paymentId}}/capture",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "payments", "{{paymentId}}", "capture"]
+        },
+        "description": "Expects 409 Conflict when attempting to execute an already EXECUTED settlement."
+      },
+      "response": []
+    }
+  ]
+}
