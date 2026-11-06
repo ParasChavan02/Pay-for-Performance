@@ -1,0 +1,2 @@
+import { ErrorRequestHandler } from 'express'; import { AppError } from '../shared/errors/app-error';
+export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => { const cast = err?.name === 'CastError'; const error = err instanceof AppError ? err : new AppError(cast ? 400 : 500, cast ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR', cast ? 'Invalid resource identifier' : 'An error occurred'); res.status(error.statusCode).json({ success: false, message: error.message, error: { code: error.code, ...(error.details ? { details: error.details } : {}) } }); };
