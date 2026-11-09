@@ -1,0 +1,17 @@
+{
+  "clean_sla.pdf": {
+    "status": "ok",
+    "uptime_threshold": 99.9,
+    "credits": [[99.9, 10]],
+    "cap": 30
+  },
+  "tiered_sla.pdf": {
+    "status": "ok",
+    "uptime_threshold": 99.9,
+    "credits": [[99.9, 10], [99.0, 25], [95.0, 50]],
+    "cap": 50
+  },
+  "tricky_sla.pdf": {
+    "status": "needs_review"
+  }
+}

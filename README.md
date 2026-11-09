@@ -360,6 +360,55 @@ Content-Type: application/json
 
 ---
 
+## 🧠 SLA Intelligence Service (Person 2)
+
+A small Python service in [`sla-service/`](sla-service) that reads an SLA PDF and returns its measurable commitments as validated JSON. An LLM on Groq (`openai/gpt-oss-120b`, strict JSON mode) reads the contract, and plain code checks the answer: every quote must be on its cited page, every number must be in its quote, and credit tiers must make sense. Any failed check or vague clause sets `validation.status` to `needs_review`. It never outputs dollar amounts.
+
+### Run it
+```bash
+cd sla-service
+python -m venv .venv
+.venv/Scripts/python -m pip install -r requirements.txt   # macOS/Linux: .venv/bin/python
+cp .env.example .env                                      # then paste your key from https://console.groq.com/keys
+.venv/Scripts/python -m uvicorn main:app --reload --port 8000
+```
+
+### Try it
+```bash
+curl -F "file=@../samples/tiered_sla.pdf" http://localhost:8000/sla/extract
+```
+
+| Status | Meaning |
+|---|---|
+| `200` | Extracted. Check `validation.status` before using the values. |
+| `413` | The PDF is over 10 MB. |
+| `422` | Not a readable PDF, a scanned PDF with no text, over 50 pages, or no file sent. |
+| `502` | The LLM failed or returned an unusable answer. Try again. |
+
+### Test it
+```bash
+.venv/Scripts/python -m pytest          # no API key needed
+.venv/Scripts/python live_check.py      # uses the real Groq model and your free quota
+```
+
+`samples/tiered_sla.pdf` is the demo contract: 97% uptime falls in the 25% credit tier.
+
+### Buyer agent
+The agent reads the SLA for each offer in [`sla-service/offers.json`](sla-service/offers.json) with the LLM, then picks one in plain code. It skips any SLA that needs review, is over budget, or promises too little uptime, and then prefers the most credit protection and the lowest price. It creates the PayPal order through the payments API, and a person approves it in the PayPal sandbox.
+
+```bash
+cd sla-service
+.venv/Scripts/python buyer_agent.py buy --budget 110 --dry-run       # shows the choice and the requests, sends nothing
+.venv/Scripts/python buyer_agent.py buy --budget 110 --service-id <backend service id>
+.venv/Scripts/python buyer_agent.py authorize <orderId> --contract-id <contract id>
+```
+
+With `--service-id`, the agent also registers the SLA as a Draft contract with the backend at `POST /api/sla/contracts`, and `authorize` activates it once the payment hold is placed. The PayPal order's `metadata.contract_reference` matches the contract's `contractReference`, which links the money to the clause. Set `PAYMENTS_API_URL` (default `http://localhost:3000/api`) and `BACKEND_API_URL` (default `http://localhost:5000/api`) in `sla-service/.env` if the servers run elsewhere.
+
+**Note for the backend:** the settlement engine adds up every credit rule that matches, so [`to_contract.py`](sla-service/to_contract.py) sends each uptime tier as the extra percentage on top of the tier before it (10%, +15%, +25%). At 97% uptime the matching rules add up to 25%, so $100 becomes $75. If the engine changes to apply only the highest matching tier, `to_contract.py` must change too. Latency targets and exclusions aren't sent, because the backend measures average latency (not p95) and has no field for exclusions.
+
+---
+
 ## 📮 Postman Collection
 
 Import `Pay_for_Performance_PayPal_API.postman_collection.json` into Postman:
