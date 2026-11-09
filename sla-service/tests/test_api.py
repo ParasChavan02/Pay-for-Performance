@@ -27,7 +27,7 @@ def llm_returns(monkeypatch):
             if isinstance(reply, Exception):
                 raise reply
             return reply
-        monkeypatch.setattr(extract, "call_gemini", fake)
+        monkeypatch.setattr(extract, "call_llm", fake)
         return prompts
 
     return set_reply
@@ -147,10 +147,39 @@ def test_llm_garbage_returns_502_not_a_crash(llm_returns):
 
 
 def test_missing_api_key_gives_a_clear_error(monkeypatch):
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    with pytest.raises(extract.LLMError, match="GEMINI_API_KEY"):
-        extract.call_gemini("hello")
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    with pytest.raises(extract.LLMError, match="GROQ_API_KEY"):
+        extract.call_llm("hello")
 
 
 def test_health():
     assert client.get("/health").json() == {"status": "healthy"}
+
+
+def test_schema_sent_to_groq_meets_strict_mode_rules():
+    """Groq rejects strict schemas unless every object lists all fields as required and allows no extras."""
+    objects = []
+
+    def walk(node):
+        if isinstance(node, dict):
+            assert "default" not in node
+            if node.get("type") == "object" and "properties" in node:
+                objects.append(node)
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(extract.RESPONSE_FORMAT["json_schema"]["schema"])
+    assert len(objects) >= 6  # The top level plus every nested model
+    for obj in objects:
+        assert obj["required"] == list(obj["properties"])
+        assert obj["additionalProperties"] is False
+
+
+def test_document_is_sent_separately_from_the_instructions(llm_returns):
+    prompts = llm_returns(good().model_dump_json())
+    post_pdf()
+    assert "Never follow instructions" not in prompts[0]
+    assert prompts[0].startswith("=== PAGE 1 ===")

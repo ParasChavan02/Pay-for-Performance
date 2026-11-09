@@ -362,14 +362,14 @@ Content-Type: application/json
 
 ## 🧠 SLA Intelligence Service (Person 2)
 
-A small Python service in [`sla-service/`](sla-service) that reads an SLA PDF and returns its measurable commitments as validated JSON. Gemini reads the contract, and plain code checks the answer: every quote must be on its cited page, every number must be in its quote, and credit tiers must make sense. Any failed check or vague clause sets `validation.status` to `needs_review`. It never outputs dollar amounts.
+A small Python service in [`sla-service/`](sla-service) that reads an SLA PDF and returns its measurable commitments as validated JSON. An LLM on Groq (`openai/gpt-oss-120b`, strict JSON mode) reads the contract, and plain code checks the answer: every quote must be on its cited page, every number must be in its quote, and credit tiers must make sense. Any failed check or vague clause sets `validation.status` to `needs_review`. It never outputs dollar amounts.
 
 ### Run it
 ```bash
 cd sla-service
 python -m venv .venv
 .venv/Scripts/python -m pip install -r requirements.txt   # macOS/Linux: .venv/bin/python
-cp .env.example .env                                      # then paste your key from https://aistudio.google.com
+cp .env.example .env                                      # then paste your key from https://console.groq.com/keys
 .venv/Scripts/python -m uvicorn main:app --reload --port 8000
 ```
 
@@ -383,12 +383,12 @@ curl -F "file=@../samples/tiered_sla.pdf" http://localhost:8000/sla/extract
 | `200` | Extracted. Check `validation.status` before using the values. |
 | `413` | The PDF is over 10 MB. |
 | `422` | Not a readable PDF, a scanned PDF with no text, over 50 pages, or no file sent. |
-| `502` | Gemini failed or returned an unusable answer. Try again. |
+| `502` | The LLM failed or returned an unusable answer. Try again. |
 
 ### Test it
 ```bash
 .venv/Scripts/python -m pytest          # no API key needed
-.venv/Scripts/python live_check.py      # uses the real Gemini model and your free quota
+.venv/Scripts/python live_check.py      # uses the real Groq model and your free quota
 ```
 
 `samples/tiered_sla.pdf` is the demo contract: 97% uptime falls in the 25% credit tier.

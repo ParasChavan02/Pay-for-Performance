@@ -15,7 +15,7 @@ def health() -> dict:
     return {"status": "healthy"}
 
 
-# ponytail: no login, so anyone with the URL can use our Gemini quota; add a shared key once it's public.
+# ponytail: no login, so anyone with the URL can use our Groq quota; add a shared key once it's public.
 @app.post("/sla/extract", response_model=SLAResult)
 def extract(file: UploadFile) -> SLAResult:
     pdf_bytes = file.file.read(MAX_UPLOAD_BYTES + 1)

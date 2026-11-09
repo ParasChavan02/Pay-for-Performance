@@ -1,4 +1,4 @@
-"""Run the real Gemini model on the 3 samples and compare with samples/expected.json.
+"""Run the real Groq model on the 3 samples and compare with samples/expected.json.
 
 Uses free-tier quota, so it's separate from pytest. Run: python live_check.py
 """
