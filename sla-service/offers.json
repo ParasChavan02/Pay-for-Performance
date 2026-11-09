@@ -1,0 +1,5 @@
+[
+  {"provider": "Acme Hosting", "plan": "Web Hosting Pro", "price": 120.0, "sla_pdf": "clean_sla.pdf"},
+  {"provider": "Nimbus API Cloud", "plan": "Payments API Standard", "price": 100.0, "sla_pdf": "tiered_sla.pdf"},
+  {"provider": "Cirrus Data Services", "plan": "Storage Basic", "price": 80.0, "sla_pdf": "tricky_sla.pdf"}
+]

@@ -21,17 +21,24 @@ def _normalize(text: str) -> str:
 
 
 def _check_source(label: str, source: Source, pages: dict[int, str], numbers: tuple[float, ...], issues: list[str]) -> None:
-    """The quote must be on the cited page and must contain the numbers we extracted from it."""
-    if source.page not in pages:
-        issues.append(f"{label}: page {source.page} does not exist in this PDF.")
-        return
+    """The quote must be in the PDF and must contain the numbers we extracted from it.
+
+    The LLM sometimes copies a quote exactly but cites the wrong page. If the quote is on exactly
+    one page, code sets the page, so the audit trail always points to where the text really is.
+    """
     quote = _normalize(source.quote)
     if not quote:
         issues.append(f"{label}: source quote is empty.")
         return
-    if quote not in _normalize(pages[source.page]):
-        issues.append(f"{label}: quote not found on page {source.page}: \"{source.quote}\"")
-        return
+    if quote not in _normalize(pages.get(source.page, "")):
+        found_on = [number for number, text in pages.items() if quote in _normalize(text)]
+        if not found_on:
+            issues.append(f"{label}: quote not found in the PDF: \"{source.quote}\"")
+            return
+        if len(found_on) > 1:
+            issues.append(f"{label}: quote appears on pages {found_on}, so its page is unclear: \"{source.quote}\"")
+            return
+        source.page = found_on[0]
     in_quote = {float(n) for n in _NUMBER.findall(quote)}
     for number in numbers:
         if number not in in_quote:

@@ -76,19 +76,31 @@ def test_curly_quotes_and_line_breaks_still_match():
 def test_invented_quote(pages):
     def change(d):
         d.commitments[0].source.quote = "guarantees 99.9% uptime forever"
-    assert "quote not found" in issues_after(pages, change)
+    assert "quote not found in the PDF" in issues_after(pages, change)
 
 
-def test_real_quote_on_the_wrong_page(pages):
+@pytest.mark.parametrize("wrong_page", [3, 99])
+def test_real_quote_with_wrong_page_is_corrected_by_code(pages, wrong_page):
+    """Seen live: Groq copied tier rows exactly but cited page 3 instead of 2."""
+    data = good()
+    data.credit_rules[1].source.page = wrong_page
+    result = validate(data, pages)
+    assert result.status == "ok"
+    assert data.credit_rules[1].source.page == 2
+
+
+def test_quote_on_several_pages_is_not_guessed():
+    pages = {1: "Uptime is at least 99.9%", 2: "Uptime is at least 99.9%"}
+    data = good()
+    data.commitments = [data.commitments[0].model_copy(update={"source": Source(page=5, quote="Uptime is at least 99.9%")})]
+    assert any("page is unclear" in issue for issue in validate(data, pages).issues)
+
+
+def test_wrong_page_does_not_excuse_a_wrong_number(pages):
     def change(d):
-        d.commitments[0].source.page = 3
-    assert "quote not found on page 3" in issues_after(pages, change)
-
-
-def test_page_that_does_not_exist(pages):
-    def change(d):
-        d.commitments[0].source.page = 99
-    assert "page 99 does not exist" in issues_after(pages, change)
+        d.credit_rules[1].source.page = 3
+        d.credit_rules[1].credit_percent = 30
+    assert "value 30 does not appear" in issues_after(pages, change)
 
 
 def test_right_quote_but_wrong_number(pages):

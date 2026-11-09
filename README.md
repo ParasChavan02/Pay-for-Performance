@@ -393,6 +393,20 @@ curl -F "file=@../samples/tiered_sla.pdf" http://localhost:8000/sla/extract
 
 `samples/tiered_sla.pdf` is the demo contract: 97% uptime falls in the 25% credit tier.
 
+### Buyer agent
+The agent reads the SLA for each offer in [`sla-service/offers.json`](sla-service/offers.json) with the LLM, then picks one in plain code. It skips any SLA that needs review, is over budget, or promises too little uptime, and then prefers the most credit protection and the lowest price. It creates the PayPal order through the payments API, and a person approves it in the PayPal sandbox.
+
+```bash
+cd sla-service
+.venv/Scripts/python buyer_agent.py buy --budget 110 --dry-run       # shows the choice and the requests, sends nothing
+.venv/Scripts/python buyer_agent.py buy --budget 110 --service-id <backend service id>
+.venv/Scripts/python buyer_agent.py authorize <orderId> --contract-id <contract id>
+```
+
+With `--service-id`, the agent also registers the SLA as a Draft contract with the backend at `POST /api/sla/contracts`, and `authorize` activates it once the payment hold is placed. The PayPal order's `metadata.contract_reference` matches the contract's `contractReference`, which links the money to the clause. Set `PAYMENTS_API_URL` (default `http://localhost:3000/api`) and `BACKEND_API_URL` (default `http://localhost:5000/api`) in `sla-service/.env` if the servers run elsewhere.
+
+**Note for the backend:** the settlement engine adds up every credit rule that matches, so [`to_contract.py`](sla-service/to_contract.py) sends each uptime tier as the extra percentage on top of the tier before it (10%, +15%, +25%). At 97% uptime the matching rules add up to 25%, so $100 becomes $75. If the engine changes to apply only the highest matching tier, `to_contract.py` must change too. Latency targets and exclusions aren't sent, because the backend measures average latency (not p95) and has no field for exclusions.
+
 ---
 
 ## 📮 Postman Collection
