@@ -1,4 +1,4 @@
-import Navbar from "@/components/Navbar";
+
 import UptimeChart from "@/components/UptimeChart";
 import ApprovalCard from "@/components/ApprovalCard";
 import { mockSettlement, mockUptimeSeries } from "@/lib/mock";
@@ -18,7 +18,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Navbar />
+      
       <main className="pt-28 pb-24 px-6 max-w-[1280px] mx-auto space-y-6">
         <div>
           <h1 className="font-headline font-bold text-4xl text-primary">Control center</h1>
