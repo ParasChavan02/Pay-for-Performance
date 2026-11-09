@@ -285,3 +285,30 @@ def test_dollar_credit_is_flagged(pages):
             CreditRule(commitment_id="c1", if_below=90, credit_percent=60, confidence=0.9, source=Source(page=2, quote="Below 90% pays $500 or 60%"))
         )
     assert "dollar amount" in issues_after(pages, change)
+
+
+# --- Edge cases: vague wording the LLM reported as certain ---
+@pytest.mark.parametrize("quote, word", [
+    ("If uptime falls below 98%, a credit of up to 15% may apply.", "up to"),
+    ("Credits may be granted at Provider's discretion: below 98% pays 15%.", "may"),
+])
+def test_hedged_credit_rule_is_flagged_even_at_high_confidence(quote, word):
+    pages = {1: "Provider guarantees 99.9% uptime.", 2: quote}
+    data = good()
+    data.commitments = [data.commitments[0].model_copy(update={"source": Source(page=1, quote="guarantees 99.9% uptime")})]
+    data.credit_rules = [CreditRule(commitment_id="c1", if_below=98, credit_percent=15, confidence=1.0, source=Source(page=2, quote=quote))]
+    issues = " | ".join(validate(data, pages).issues)
+    assert f'vague wording "{word}"' in issues
+
+
+def test_target_is_not_a_guarantee():
+    pages = {1: "Provider targets uptime of 99.5% in a typical month."}
+    data = good()
+    data.commitments = [data.commitments[0].model_copy(update={"threshold": 99.5, "source": Source(page=1, quote="targets uptime of 99.5%")})]
+    data.credit_rules = []
+    assert any('vague wording "targets"' in issue for issue in validate(data, pages).issues)
+
+
+def test_caps_and_exclusions_may_say_up_to(pages):
+    """'up to 2 hours' is a normal exclusion limit, so it must not be flagged as vague."""
+    assert validate(good(), pages).status == "ok"

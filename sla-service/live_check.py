@@ -6,7 +6,7 @@ import json
 import sys
 from pathlib import Path
 
-from extract import extract_sla
+from extract import LLMError, extract_sla
 
 SAMPLES = Path(__file__).resolve().parent.parent / "samples"
 
@@ -32,7 +32,12 @@ def problems_with(result, expected: dict) -> list[str]:
 def main() -> int:
     failed = False
     for name, expected in json.loads((SAMPLES / "expected.json").read_text()).items():
-        result = extract_sla((SAMPLES / name).read_bytes())
+        try:
+            result = extract_sla((SAMPLES / name).read_bytes())
+        except LLMError as err:
+            failed = True
+            print(f"\nFAIL  {name}: {err} (cause: {err.__cause__!r})")
+            continue
         problems = problems_with(result, expected)
         failed = failed or bool(problems)
         print(f"\n{'PASS' if not problems else 'FAIL'}  {name}: {result.validation.status}")

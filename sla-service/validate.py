@@ -10,6 +10,8 @@ MIN_CONFIDENCE = 0.8
 KNOWN_METRICS = {"uptime_percent", "p95_latency_ms"}
 HOURS_IN_LONGEST_MONTH = 744
 _NUMBER = re.compile(r"\d+(?:\.\d+)?")
+# Words that turn a promise into a maybe. Not checked on caps or exclusions, where "up to" is normal.
+_HEDGE = re.compile(r"\b(up to|may|might|discretion|targets?|typical(ly)?|generally|reasonable efforts)\b", re.IGNORECASE)
 _LOOKALIKES = str.maketrans({"‘": "'", "’": "'", "“": '"', "”": '"', "–": "-", "—": "-"})
 
 
@@ -34,6 +36,13 @@ def _check_source(label: str, source: Source, pages: dict[int, str], numbers: tu
     for number in numbers:
         if number not in in_quote:
             issues.append(f"{label}: value {number:g} does not appear in its quote: \"{source.quote}\"")
+
+
+def _check_hedge(label: str, source: Source, issues: list[str]) -> None:
+    """Catch vague wording in code, even when the LLM reports it as certain."""
+    match = _HEDGE.search(source.quote)
+    if match:
+        issues.append(f"{label}: vague wording \"{match.group(0)}\" in \"{source.quote}\"")
 
 
 def _check_confidence(label: str, confidence: float, issues: list[str]) -> None:
@@ -62,6 +71,7 @@ def _check_commitments(data: LLMExtraction, pages: dict[int, str], issues: list[
         if c.metric == "p95_latency_ms" and c.threshold <= 0:
             issues.append(f"{label}: latency {c.threshold:g} must be positive.")
         _check_source(label, c.source, pages, (c.threshold,), issues)
+        _check_hedge(label, c.source, issues)
         _check_confidence(label, c.confidence, issues)
         thresholds_by_metric.setdefault(c.metric, set()).add(c.threshold)
 
@@ -100,6 +110,7 @@ def _check_credit_rules(data: LLMExtraction, pages: dict[int, str], issues: list
         if "$" in rule.source.quote:
             issues.append(f"{label}: quote mentions a dollar amount; we only support percentage credits.")
         _check_source(label, rule.source, pages, (limit, rule.credit_percent), issues)
+        _check_hedge(label, rule.source, issues)
         _check_confidence(label, rule.confidence, issues)
         tiers.setdefault((rule.commitment_id, direction), []).append((limit, rule.credit_percent))
 
