@@ -32,3 +32,11 @@ body {
   font-family: var(--font-jakarta), sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}

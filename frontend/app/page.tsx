@@ -1,4 +1,5 @@
 import Hero from "@/components/Hero";
+import Problem from "@/components/Problem";
 import ScrollStory from "@/components/ScrollStory";
 import Features from "@/components/Features";
 import Pipeline from "@/components/Pipeline";
@@ -8,7 +9,8 @@ export default function Home() {
   return (
     <main>
       <Hero />
-      <section id="story" className="scroll-mt-0">
+      <Problem />
+      <section id="story">
         <ScrollStory />
       </section>
       <Features />

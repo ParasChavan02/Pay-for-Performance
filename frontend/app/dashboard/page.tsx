@@ -5,11 +5,35 @@ import UptimeChart from "@/components/UptimeChart";
 import ApprovalCard from "@/components/ApprovalCard";
 import { mockSettlement, mockUptimeSeries } from "@/lib/mock";
 import { toNumber, formatMoney } from "@/lib/money";
+import { api } from "@/lib/api";
 
 const START_POINTS = 2; // healthy points shown before the outage
 
 export default function Dashboard() {
-  const s = mockSettlement;
+  const [s, setS] = useState(mockSettlement);
+  const [live, setLive] = useState(false);
+
+  // fetch real settlement from backend, fall back to mock if it fails
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    api<any>("/api/settlements")
+      .then((d) => {
+        console.log("backend settlements:", d);
+       const first = Array.isArray(d)
+  ? d[0]
+  : d?.data?.[0] ?? d?.settlements?.[0] ?? d?.items?.[0] ?? d;
+        if (
+          first &&
+          first.authorizedAmount !== undefined &&
+          first.calculationBreakdown?.length
+        ) {
+          setS(first);
+          setLive(true);
+        }
+      })
+      .catch((e) => console.error("backend fetch failed:", e.message));
+  }, []);
+
   const cur = s.currency;
   const target = s.calculationBreakdown[0].contractualThreshold;
 
@@ -62,7 +86,12 @@ export default function Dashboard() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="font-headline font-bold text-4xl text-primary">Control center</h1>
-            <p className="text-on-surface-variant mt-1">Payment {s.paymentId}</p>
+            <p className="text-on-surface-variant mt-1">
+              Payment {s.paymentId}{" "}
+              <span className={`ml-2 text-xs font-bold ${live ? "text-secondary" : "text-on-surface-variant"}`}>
+                {live ? "● live backend data" : "○ demo data"}
+              </span>
+            </p>
           </div>
           <div className="flex gap-3">
             {shown > START_POINTS && !running && (
