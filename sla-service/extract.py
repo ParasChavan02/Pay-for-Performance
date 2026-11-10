@@ -72,20 +72,45 @@ def call_llm(document: str) -> str:
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         raise LLMError("GROQ_API_KEY is not set. Copy .env.example to .env and add your key.")
+    client = Groq(api_key=api_key, timeout=120)
+    model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
+
     try:
-        response = Groq(api_key=api_key, timeout=120).chat.completions.create(
-            model=os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b"),
+        response = client.chat.completions.create(
+            model=model,
             messages=[
                 {"role": "system", "content": INSTRUCTIONS},
                 {"role": "user", "content": document},
             ],
             response_format=RESPONSE_FORMAT,
-            temperature=0,  # Same PDF, same answer as far as possible.
+            temperature=0,
         )
         return response.choices[0].message.content
-    except Exception as err:  # Network failures, free-tier limits and server errors all end up here.
-        log.exception("Groq call failed")
-        raise LLMError("The AI service failed. It may be busy or over its free limit, so try again soon.") from err
+    except Exception as err:
+        log.warning("Groq strict schema call failed, falling back to json_object mode: %s", err)
+        try:
+            fallback_prompt = (
+                INSTRUCTIONS
+                + "\n\nRespond with a valid JSON object matching the requested fields: "
+                "commitments (list of {id, metric, operator, threshold, source: {page, quote}, confidence}), "
+                "credit_rules (list of {commitment_id, if_below, if_above, credit_percent, source: {page, quote}, confidence}), "
+                "provider, service, measurement_period, timezone, credit_cap_percent, exclusions, uncertain_clauses."
+            )
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": fallback_prompt},
+                    {"role": "user", "content": document},
+                ],
+                response_format={"type": "json_object"},
+                temperature=0,
+            )
+            return response.choices[0].message.content
+        except Exception as fallback_err:
+            log.exception("Groq call failed")
+            raise LLMError(
+                "The AI service failed. It may be busy or over its free limit, so try again soon."
+            ) from fallback_err
 
 
 def extract_sla(pdf_bytes: bytes) -> SLAResult:

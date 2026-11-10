@@ -63,4 +63,16 @@ export const auditService = {
 
     return logs as unknown as AuditLogDocument[];
   },
+
+  /**
+   * List recent audit logs chronologically across the system.
+   */
+  async listAll(limit = 50): Promise<AuditLogDocument[]> {
+    const logs = await AuditLogModel.find()
+      .sort({ timestamp: 1 })
+      .limit(limit)
+      .lean();
+
+    return logs as unknown as AuditLogDocument[];
+  },
 };

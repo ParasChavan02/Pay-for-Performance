@@ -14,14 +14,14 @@ export default function Dashboard() {
   const [live, setLive] = useState(false);
 
   // fetch real settlement from backend, fall back to mock if it fails
-  useEffect(() => {
+  const fetchSettlement = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     api<any>("/api/settlements")
       .then((d) => {
         console.log("backend settlements:", d);
-       const first = Array.isArray(d)
-  ? d[0]
-  : d?.data?.[0] ?? d?.settlements?.[0] ?? d?.items?.[0] ?? d;
+        const first = Array.isArray(d)
+          ? d[0]
+          : d?.data?.[0] ?? d?.settlements?.[0] ?? d?.items?.[0] ?? d;
         if (
           first &&
           first.authorizedAmount !== undefined &&
@@ -32,6 +32,10 @@ export default function Dashboard() {
         }
       })
       .catch((e) => console.error("backend fetch failed:", e.message));
+  };
+
+  useEffect(() => {
+    fetchSettlement();
   }, []);
 
   const cur = s.currency;
@@ -125,7 +129,7 @@ export default function Dashboard() {
           </div>
           <div className="lg:col-span-2">
             {settled ? (
-              <ApprovalCard key={runId} settlement={s} />
+              <ApprovalCard key={runId} settlement={s} onApproved={fetchSettlement} />
             ) : (
               <div className="rounded-3xl bg-surface-container-lowest border border-surface-container p-6 h-full flex flex-col justify-center">
                 <h3 className="font-headline font-bold text-lg text-primary mb-1">Payment approval</h3>

@@ -7,6 +7,11 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
+    "dev:all": "node scripts/dev-all.mjs",
+    "dev:paypal": "tsx watch src/server.ts",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:sla": "cd sla-service && python -m uvicorn main:app --port 8000 --reload",
     "test": "tsx --test tests/**/*.test.ts"
   },
   "keywords": [

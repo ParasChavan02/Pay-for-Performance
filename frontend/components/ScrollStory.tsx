@@ -69,7 +69,7 @@ function Monitor({ p }: { p: P }) {
 function ApproveButton({ p }: { p: P }) {
   const scale = useTransform(p, [0.7, 0.73, 0.76], [1, 0.92, 1]);
   const bg = useTransform(p, [0.72, 0.75], ["#00457c", "#006d37"]);
-  const label = useTransform(p, (v) => (v > 0.74 ? "✅ Approved" : "Approve"));
+  const label = useTransform(p, (v: number): string => (v > 0.74 ? "✅ Approved" : "Approve"));
   return (
     <motion.div style={{ scale, backgroundColor: bg }} className="px-6 py-2 rounded-full text-white font-bold text-sm inline-block">
       <motion.span>{label}</motion.span>

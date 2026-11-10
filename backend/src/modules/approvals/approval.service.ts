@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { AppError } from '../../shared/errors/app-error';
 import { auditService } from '../audit/audit.service';
 import { SettlementModel } from '../settlement/settlement.model';
+import { PaymentAuthorizationAdapter } from '../settlement/payment-authorization.adapter';
 import { ApprovalDocument, ApprovalModel } from './approval.model';
 import {
   ApproveApprovalInput,
@@ -151,6 +152,48 @@ export const approvalService = {
     // Transition settlement status
     settlement.status = 'Approved';
     await settlement.save();
+
+    // Trigger real PayPal capture via PaymentAuthorizationAdapter
+    if (settlement.authorizedAmount) {
+      try {
+        await PaymentAuthorizationAdapter.stageSettlement({
+          settlementId: String(settlement._id),
+          paymentId: settlement.paymentId,
+          authorizedAmount: settlement.authorizedAmount?.toString() || '0.00',
+          creditAmount: settlement.totalCredit?.toString() || '0.00',
+          captureAmount: settlement.finalPayableAmount?.toString() || '0.00',
+          currency: settlement.currency || 'USD',
+          decision: 'APPROVED',
+          approvedBy: reviewer.reviewerName ?? reviewer.reviewerId,
+        });
+
+        const captureResult = await PaymentAuthorizationAdapter.executeCapture(
+          settlement.paymentId,
+          String(settlement._id)
+        );
+
+        if (captureResult.success) {
+          settlement.status = 'Paid';
+          await settlement.save();
+
+          await auditService.append({
+            action: 'PAYMENT_CAPTURED',
+            entityType: 'Settlement',
+            entityId: String(settlement._id),
+            settlementId: approval.settlementId,
+            actorId: reviewer.reviewerId,
+            description: `PayPal captured $${captureResult.capturedAmount} (Capture ID: ${captureResult.captureId})`,
+            metadata: {
+              paypalCaptureId: captureResult.captureId,
+              capturedAmount: captureResult.capturedAmount,
+              status: captureResult.status,
+            },
+          });
+        }
+      } catch (err: any) {
+        console.warn('[Approval Payment Capture Warning]', err.message);
+      }
+    }
 
     // Append audit records
     await auditService.append({

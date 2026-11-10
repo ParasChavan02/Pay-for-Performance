@@ -15,3 +15,9 @@ export const settlementAudit: RequestHandler = asyncHandler(async (req, res) => 
   const logs = await auditService.getBySettlement(settlementId);
   success(res, 'Settlement audit trail retrieved successfully', logs);
 });
+
+export const listAuditLogs: RequestHandler = asyncHandler(async (req, res) => {
+  const limit = req.query['limit'] ? parseInt(req.query['limit'] as string, 10) : 50;
+  const logs = await auditService.listAll(limit);
+  success(res, 'Audit trail retrieved successfully', logs);
+});

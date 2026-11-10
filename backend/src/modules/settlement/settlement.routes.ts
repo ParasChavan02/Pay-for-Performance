@@ -8,6 +8,7 @@ import {
   getSettlementsByService,
   getSettlementBreakdown,
   recalculateSettlement,
+  approveSettlementDirect,
 } from './settlement.controller';
 import {
   calculateSettlementSchema,
@@ -32,6 +33,11 @@ router.post(
   '/:id/recalculate',
   validate(settlementIdParamSchema, 'params'),
   recalculateSettlement
+);
+router.post(
+  '/:id/approve',
+  validate(settlementIdParamSchema, 'params'),
+  approveSettlementDirect
 );
 router.get('/:id', validate(settlementIdParamSchema, 'params'), getSettlement);
 router.get('/', validate(listSettlementsQuerySchema, 'query'), listSettlements);
