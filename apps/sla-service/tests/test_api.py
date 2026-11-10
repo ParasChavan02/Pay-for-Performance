@@ -9,7 +9,9 @@ import main
 from schema import Commitment, CreditRule, Exclusion, LLMExtraction, Source, UncertainClause
 from test_validate import good
 
-SAMPLES = Path(__file__).resolve().parents[2] / "samples"
+SAMPLES = Path(__file__).resolve().parent.parent / "samples"
+if not SAMPLES.exists():
+    SAMPLES = Path(__file__).resolve().parents[3] / "samples"
 client = TestClient(main.app)
 
 

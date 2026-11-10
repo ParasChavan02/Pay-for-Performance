@@ -1,44 +1,38 @@
 {
-  "name": "pay-for-performance-paypal",
+  "name": "pay-for-performance-monorepo",
   "version": "1.0.0",
-  "description": "AI-powered SLA-based payment settlement platform - PayPal Payment Integration Module",
-  "main": "dist/server.js",
+  "private": true,
+  "description": "AI-powered SLA-based payment settlement platform — Monorepo Architecture",
+  "workspaces": [
+    "apps/web",
+    "apps/api",
+    "apps/payments",
+    "packages/*"
+  ],
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "tsx watch src/server.ts",
+    "dev": "node scripts/dev-all.mjs",
     "dev:all": "node scripts/dev-all.mjs",
-    "dev:paypal": "tsx watch src/server.ts",
-    "dev:backend": "npm --prefix backend run dev",
-    "dev:frontend": "npm --prefix frontend run dev",
-    "dev:sla": "cd sla-service && python -m uvicorn main:app --port 8000 --reload",
-    "test": "tsx --test tests/**/*.test.ts"
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:api": "npm --prefix apps/api run dev",
+    "dev:payments": "npm --prefix apps/payments run dev",
+    "dev:sla": "cd apps/sla-service && py -3.14 -m uvicorn main:app --port 8000 --reload",
+    "build": "npm --prefix apps/payments run build && npm --prefix apps/api run build && npm --prefix apps/web run build",
+    "test": "npm --prefix apps/payments test && npm --prefix apps/api test",
+    "test:sla": "cd apps/sla-service && py -3.14 -m pytest",
+    "test:all": "npm --prefix apps/payments test && npm --prefix apps/api test && cd apps/sla-service && py -3.14 -m pytest",
+    "seed": "npm --prefix apps/api run seed"
   },
   "keywords": [
+    "pay-for-performance",
     "paypal",
-    "payments",
     "sla",
     "settlement",
-    "pay-for-performance",
-    "express",
-    "typescript"
+    "monorepo",
+    "mongodb",
+    "fastapi",
+    "nextjs",
+    "express"
   ],
-  "author": "Person 1 - PayPal Integration Lead",
-  "license": "MIT",
-  "dependencies": {
-    "axios": "^1.7.9",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "uuid": "^11.0.5",
-    "zod": "^3.24.1"
-  },
-  "devDependencies": {
-    "@types/cors": "^2.8.17",
-    "@types/express": "^5.0.0",
-    "@types/node": "^22.10.7",
-    "@types/uuid": "^10.0.0",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
-  }
+  "author": "Pay-for-Performance Core Team",
+  "license": "MIT"
 }

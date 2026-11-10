@@ -1,67 +1,54 @@
-# Pay-for-Performance — SLA-Based Payment Settlement Platform
+# Pay-for-Performance — Production Monorepo
 
 > **"Don't pay for promises. Pay for verified performance."**
 
-Pay-for-Performance is an end-to-end AI-powered financial settlement platform that connects service contracts directly to automated, evidence-backed payment decisions.
+Pay-for-Performance is an AI-powered SLA-based payment settlement platform that converts service-level agreements into evidence-backed financial decisions executed through PayPal.
 
-```text
-       ┌────────────────────────┐
-       │   Client Signs SLA     │
-       └───────────┬────────────┘
-                   │
-                   ▼
-┌───────────────────────────────────────┐
-│  1. Create $100 Order & Hold          │◄── PayPal Orders API v2 (intent=AUTHORIZE)
-│     Buyer approves in Sandbox         │
-└──────────────────┬────────────────────┘
-                   │
-                   ▼
-┌───────────────────────────────────────┐
-│  2. AI Extracts Contract Promises     │◄── FastAPI + Groq LLM (llama-3.3-70b-versatile)
-│     (Uptime, Latency, Credit Terms)   │
-└──────────────────┬────────────────────┘
-                   │
-                   ▼
-┌───────────────────────────────────────┐
-│  3. Continuous Service Monitoring     │◄── Automated health checker + latency tracker
-│     Breach detected (e.g. 97.4% < 99.9%)  MongoDB audit trail
-└──────────────────┬────────────────────┘
-                   │
-                   ▼
-┌───────────────────────────────────────┐
-│  4. Deterministic Credit Calculation  │◄── $100 Authorized - $25 SLA Credit = $75 Due
-│     Policy Engine Flags Review        │
-└──────────────────┬────────────────────┘
-                   │
-                   ▼
-┌───────────────────────────────────────┐
-│  5. Operator Approves Settlement      │◄── Human review in Next.js Control Center
-└──────────────────┬────────────────────┘
-                   │
-                   ▼
-┌───────────────────────────────────────┐
-│  6. PayPal Captures $75 Final Amount  │◄── PayPal Payments API v2 (final_capture: true)
-│     Remaining $25 automatically freed │
-└──────────────────┬────────────────────┘
-                   │
-                   ▼
-┌───────────────────────────────────────┐
-│  7. Immutable Evidence Audit Trail    │◄── Tamper-evident ledger & transaction history
-└───────────────────────────────────────┘
+---
+
+## 🏗️ Monorepo Architecture
+
+```
+pay-for-performance/
+│
+├── apps/
+│   ├── web/                     # Person 4: Next.js 16 (App Router), Tailwind CSS v4, AG-Grid
+│   ├── api/                     # Person 3: Express, TypeScript, Mongoose 8, Policy & Monitoring Hub
+│   ├── payments/                # Person 1: PayPal REST API v2 Integration (Authorize, Capture, Refund)
+│   └── sla-service/             # Person 2: Python FastAPI, Groq LLM (llama-3.3/gpt-oss), PDFPlumber
+│
+├── packages/
+│   ├── contracts/               # Shared TypeScript domain contracts & DTOs
+│   └── config/                  # Shared linting, build, and environment constants
+│
+├── infra/
+│   ├── mongodb/
+│   │   └── docker-compose.yml   # Containerized MongoDB 7 with persistent volume
+│   └── deployment/              # Production deployment guides (Render / Cloud Run)
+│
+├── docs/
+│   ├── architecture/            # System topology, sequence flows, policy logic
+│   ├── api/                     # Complete endpoint specification
+│   └── setup/                   # MongoDB local & Atlas configuration guide
+│
+├── scripts/                     # Unified dev runner (dev-all.mjs), seed scripts, SLA generators
+├── .gitignore                   # Consolidated monorepo gitignore
+├── .env.example                 # Root orchestrator environment template
+├── package.json                 # npm workspaces root coordinator
+├── package-lock.json
+└── README.md
 ```
 
 ---
 
-## 🏗️ System Architecture & Ports
+## 📦 Service Ownership & Ports
 
-The platform is split into four specialized microservices designed for maximum reliability and separation of concerns:
-
-| Component | Responsibility | Tech Stack | Local Port |
-| :--- | :--- | :--- | :--- |
-| **Frontend** (`frontend/`) | Control Center, Live Outage Simulator, Approval UX, Audit Trail | Next.js 16 (React 19, Tailwind CSS, Motion, AG-Grid) | `http://localhost:3000` |
-| **PayPal Service** (`src/`) | Payment Orchestration, Authorization Holds, Capture & Refund APIs | Node.js, Express, TypeScript, PayPal REST SDK | `http://localhost:4000` |
-| **Main Backend Hub** (`backend/`) | Persistent Ledger, SLA Policy Engine, Monitoring, Approvals | Node.js, Express, TypeScript, MongoDB (Mongoose) | `http://localhost:5000` |
-| **SLA Intelligence** (`sla-service/`) | PDF Contract Parsing, Groq LLM Term Extraction, Verification | Python 3, FastAPI, PDFPlumber, Groq API, Uvicorn | `http://localhost:8000` |
+| Component | Directory | Owner | Tech Stack | Local Port |
+| :--- | :--- | :--- | :--- | :--- |
+| **Web** | `apps/web/` | [Harshika Bodekar](https://github.com/harshikabodekar) (Person 4) | Next.js 16, React 19, Tailwind CSS, Motion, AG-Grid | `http://localhost:3000` |
+| **Payments** | `apps/payments/` | [Paras Chavan](https://github.com/ParasChavan02) (Person 1) | Node.js, Express, TypeScript, PayPal REST APIs | `http://localhost:4000` |
+| **Main API** | `apps/api/` | [Manas Pandya](https://github.com/hindmanas) (Person 3) | Express, TypeScript, MongoDB (Mongoose), Policy Engine | `http://localhost:5000` |
+| **SLA Service**| `apps/sla-service/` | [Tanmay Shinde](https://github.com/Tanny28) (Person 2) | Python 3.10+, FastAPI, Groq LLM, PDFPlumber | `http://localhost:8000` |
 
 ---
 
@@ -70,77 +57,75 @@ The platform is split into four specialized microservices designed for maximum r
 ### 1. Prerequisites
 - **Node.js** v20+ and **npm**
 - **Python** 3.10+
-- **MongoDB** running locally on `mongodb://127.0.0.1:27017`
+- **MongoDB** (Local via Docker Compose or MongoDB Atlas)
 
 ### 2. Environment Configuration
-Verify the credentials in each service:
-- **Root `.env`**: Contains PayPal Sandbox `PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` (`PORT=4000`).
-- **`backend/.env`**: Points to `MONGODB_URI=mongodb://127.0.0.1:27017/pay_for_performance`, `PAYMENT_SERVICE_URL=http://localhost:4000/api`, and `SLA_SERVICE_URL=http://localhost:8000`.
-- **`sla-service/.env`**: Contains `GROQ_API_KEY` for LLM contract extraction.
-- **`frontend/.env.local`**: Configured with `NEXT_PUBLIC_API_URL=http://localhost:5000`.
+Verify environment files in each app:
+- `apps/payments/.env`: PayPal Sandbox credentials (`PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET`)
+- `apps/api/.env`: MongoDB connection (`MONGODB_URI`), `PAYMENT_SERVICE_URL=http://localhost:4000/api`, `SLA_SERVICE_URL=http://localhost:8000`
+- `apps/sla-service/.env`: Groq API key (`GROQ_API_KEY`)
+- `apps/web/.env.local`: API endpoint (`NEXT_PUBLIC_API_URL=http://localhost:5000`)
 
-### 3. Seed Database
-Seed MongoDB with active demo services, contracts, and metrics:
+### 3. Start Database
+To run a local MongoDB instance:
 ```bash
-npm --prefix backend run seed
+docker compose -f infra/mongodb/docker-compose.yml up -d
+```
+*Or connect directly to your MongoDB Atlas cluster by setting `MONGODB_URI` in `apps/api/.env`.*
+
+Seed demonstration services, metrics, contracts, and breaches:
+```bash
+npm run seed
 ```
 
-### 4. Start All Services in One Command
-Run the root orchestrator to spin up all 4 microservices simultaneously:
+### 4. Start All Services (Single Command)
+Run the root orchestrator to boot all 4 microservices simultaneously:
 ```bash
-npm run dev:all
+npm run dev
 ```
 
-Or run each service individually in separate terminals:
-- **PayPal Service**: `npm run dev:paypal` (`http://localhost:4000`)
-- **Backend Hub**: `npm run dev:backend` (`http://localhost:5000`)
-- **Frontend Dashboard**: `npm run dev:frontend` (`http://localhost:3000`)
-- **SLA Intelligence**: `npm run dev:sla` (`http://localhost:8000`)
+Or run individual apps:
+- **Web UI**: `npm run dev:web`
+- **Main API**: `npm run dev:api`
+- **Payments**: `npm run dev:payments`
+- **SLA Service**: `npm run dev:sla`
 
 ---
 
-## 🧪 Testing & Verification
+## 🧪 Testing
 
-Every layer contains unit and integration test suites:
+Execute automated test suites across the entire monorepo:
 
-- **PayPal Payment Integration Tests** (15 tests, 100% pass):
-  ```bash
-  npm test
-  ```
-- **Backend Hub & Policy Tests** (134 tests, 100% pass):
-  ```bash
-  npm --prefix backend test
-  ```
-- **Python SLA Intelligence Tests** (85 tests, 100% pass):
-  ```bash
-  cd sla-service && pytest
-  ```
-- **Frontend Next.js Production Build**:
-  ```bash
-  npm --prefix frontend run build
-  ```
+```bash
+# Run all payment, backend API, and Python pytest tests (234 total tests)
+npm run test:all
+
+# Production build of payments, api, and web applications
+npm run build
+```
+
+Individual service tests:
+- **PayPal Payment Tests** (15 tests): `npm --prefix apps/payments test`
+- **Backend API & Policy Tests** (134 tests): `npm --prefix apps/api test`
+- **Python SLA Intelligence Tests** (85 tests): `npm run test:sla`
 
 ---
 
-## 🎬 The Primary Demo Walkthrough
+## 🎬 Primary Demo Scenario
 
-1. **Buyer Order & Authorization**:
-   - Open `http://localhost:4000/` or trigger through the API to create a $100 authorization hold on PayPal Sandbox.
-   - The buyer approves the hold via PayPal's checkout modal.
-2. **Contract Extraction**:
-   - Visit `http://localhost:3000/upload`.
-   - Drop an SLA PDF. Groq AI parses uptime targets (e.g. 99.9%) and penalty clauses (25% credit).
-3. **Simulated Outage & Breach Detection**:
-   - Go to `http://localhost:3000/dashboard`.
-   - Click **Simulate Outage**. Watch the uptime graph plunge below the 99.9% contractual line.
-   - The deterministic rules engine detects the breach and calculates a **$25 SLA credit**.
-4. **Approval & $75 Partial Capture**:
-   - The Approval Card presents:
-     - **SLA Credit**: `$25.00`
-     - **To Capture**: `$75.00`
-   - Click **Approve & capture**.
-   - The backend calls the PayPal engine, capturing exactly `$75.00` with `final_capture: true`.
-   - The remaining `$25.00` authorization hold is automatically released back to the buyer by PayPal.
-5. **Auditing & Transaction Ledger**:
-   - Visit `http://localhost:3000/transactions` to see the live PayPal authorization and capture record.
-   - Visit `http://localhost:3000/audit` to view the full cryptographic, immutable audit log connecting contract terms, breach evidence, human sign-off, and PayPal settlement.
+1. **Authorization Hold**: Buyer authorizes a **$100.00** order on PayPal Sandbox.
+2. **Contract Extraction**: At `http://localhost:3000/upload`, upload an SLA contract PDF (or click *"⚡ Click to auto-load demo SLA contract"*). Groq AI extracts the 99.9% uptime target and 25% credit penalty.
+3. **Outage Simulation**: At `http://localhost:3000/dashboard`, click **"Simulate Outage"**. Uptime drops below 99.9%, triggering a **$25.00 SLA credit**.
+4. **Approval & Partial Capture**: Click **"Approve & capture"**. The API calls the PayPal Engine, capturing **$75.00** with `final_capture: true`. PayPal automatically releases the remaining **$25.00** hold back to the buyer.
+5. **Auditing**: Inspect `http://localhost:3000/transactions` and `http://localhost:3000/audit` to view the tamper-evident cryptographic ledger.
+
+---
+
+## 👥 Built By (The Team)
+
+| Member | Role & Ownership | GitHub Profile | Module & Responsibilities |
+| :--- | :--- | :--- | :--- |
+| **Paras Chavan** (Person 1) | **Payment Systems Engineer** | [@ParasChavan02](https://github.com/ParasChavan02) | `apps/payments` — PayPal REST API v2, authorization holds, deterministic capture execution, partial refunds, idempotency |
+| **Tanmay Shinde** (Person 2) | **AI & Intelligence Engineer** | [@Tanny28](https://github.com/Tanny28) | `apps/sla-service` — Python FastAPI, Groq LLM contract term extraction (`openai/gpt-oss-120b`), PDFPlumber text extraction |
+| **Manas Pandya** (Person 3) | **Backend Architect & Database Lead** | [@hindmanas](https://github.com/hindmanas) | `apps/api` — Express.js architecture, MongoDB Atlas / Mongoose persistence, synthetic monitoring scheduler, SLA breach engine, financial policy evaluator |
+| **Harshika Bodekar** (Person 4) | **Frontend Lead & UX Architect** | [@harshikabodekar](https://github.com/harshikabodekar) | `apps/web` — Next.js 16 (App Router), Tailwind CSS v4, interactive Control Center, live outage simulator, PayPal approval card, AG-Grid ledger |
