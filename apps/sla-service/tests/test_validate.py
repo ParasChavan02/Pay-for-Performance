@@ -7,7 +7,9 @@ from pdf_text import extract_pages
 from schema import Commitment, CreditRule, Exclusion, LLMExtraction, Source, UncertainClause
 from validate import validate
 
-SAMPLES = Path(__file__).resolve().parents[2] / "samples"
+SAMPLES = Path(__file__).resolve().parent.parent / "samples"
+if not SAMPLES.exists():
+    SAMPLES = Path(__file__).resolve().parents[3] / "samples"
 
 
 @pytest.fixture(scope="module")

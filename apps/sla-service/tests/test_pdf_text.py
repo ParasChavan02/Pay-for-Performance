@@ -6,7 +6,9 @@ from reportlab.pdfgen import canvas
 
 from pdf_text import PdfError, extract_pages
 
-SAMPLES = Path(__file__).resolve().parents[2] / "samples"
+SAMPLES = Path(__file__).resolve().parent.parent / "samples"
+if not SAMPLES.exists():
+    SAMPLES = Path(__file__).resolve().parents[2] / "samples"
 
 
 def test_keeps_each_clause_on_its_own_page():
