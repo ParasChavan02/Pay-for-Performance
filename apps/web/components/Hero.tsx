@@ -1,10 +1,6 @@
 "use client";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
-
-const words = "Don't pay for promises. Pay for verified performance.".split(" ");
-const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function Hero() {
   return (
@@ -20,84 +16,47 @@ export default function Hero() {
         }}
       />
 
-      {/* orbs drifting behind the glass , this is what the blur shows off */}
-      <motion.div
-        animate={{ x: [0, 50, 0], y: [0, -30, 0] }}
-        transition={{ repeat: Infinity, duration: 12, ease: "easeInOut" }}
-        className="absolute top-[14%] left-[20%] w-72 h-72 rounded-full bg-secondary-container/80 blur-2xl -z-10"
-      />
-      <motion.div
-        animate={{ x: [0, -50, 0], y: [0, 40, 0] }}
-        transition={{ repeat: Infinity, duration: 15, ease: "easeInOut" }}
-        className="absolute top-[30%] right-[18%] w-80 h-80 rounded-full bg-primary-container/30 blur-2xl -z-10"
-      />
-      <motion.div
-        animate={{ x: [0, 30, 0], y: [0, -40, 0] }}
-        transition={{ repeat: Infinity, duration: 10, ease: "easeInOut" }}
-        className="absolute bottom-[18%] left-[38%] w-48 h-48 rounded-full bg-on-primary-container/40 blur-2xl -z-10"
-      />
+      {/* orbs drifting behind the glass */}
+      <div className="absolute top-[14%] left-[20%] w-72 h-72 rounded-full bg-secondary-container/80 blur-2xl -z-10 animate-pulse" />
+      <div className="absolute top-[30%] right-[18%] w-80 h-80 rounded-full bg-primary-container/30 blur-2xl -z-10 animate-pulse" />
+      <div className="absolute bottom-[18%] left-[38%] w-48 h-48 rounded-full bg-on-primary-container/40 blur-2xl -z-10" />
 
       {/* glass panel */}
-<div className="relative max-w-4xl w-full rounded-[2rem] border border-white/25 bg-white/10 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,46,86,0.06)] px-6 py-10 md:px-16 md:py-14 flex flex-col items-center">
+      <div className="relative max-w-4xl w-full rounded-[2rem] border border-white/25 bg-white/10 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,46,86,0.06)] px-6 py-10 md:px-16 md:py-14 flex flex-col items-center">
+        {/* soft shine on the glass edge */}
+        <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/20 via-transparent to-transparent" />
 
-  {/* soft shine on the glass edge */}
-  <div className="pointer-events-none absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/20 via-transparent to-transparent" />
-
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="relative flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 shadow-sm border border-white/80 mb-8"
-        >
+        <div className="relative flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 shadow-sm border border-white/80 mb-8">
           <span className="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse" />
           <span className="text-sm font-semibold text-primary">Verified settlements on PayPal</span>
-        </motion.div>
+        </div>
 
         <h1 className="relative font-headline font-bold text-primary tracking-tight text-4xl md:text-6xl leading-[1.1]">
-          {words.map((word, i) => (
-            <motion.span
-              key={i}
-              initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{ delay: 0.2 + i * 0.07, duration: 0.7, ease }}
-              className="inline-block mr-[0.25em]"
-            >
-              {word}
-            </motion.span>
-          ))}
+          Don&apos;t pay for promises. Pay for verified performance.
         </h1>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="relative mt-6 text-lg md:text-xl text-on-surface-variant max-w-xl"
-        >
+        <p className="relative mt-6 text-lg md:text-xl text-on-surface-variant max-w-xl">
           Money that responds to service quality.
-        </motion.p>
+        </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1, duration: 0.7 }}
-          className="relative mt-8 flex flex-col sm:flex-row gap-3"
-        >
-          <Link href="/dashboard" className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-container transition-colors">
+        <div className="relative mt-8 flex flex-col sm:flex-row gap-3">
+          <Link
+            href="/dashboard"
+            className="flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-container transition-colors shadow-sm"
+          >
             Open dashboard <ArrowRight size={18} />
           </Link>
-          <a href="#story" className="px-7 py-3.5 rounded-full border border-primary/20 bg-white/40 text-primary font-semibold hover:bg-white/70 transition-colors">
+          <a
+            href="#story"
+            className="px-7 py-3.5 rounded-full border border-primary/20 bg-white/60 text-primary font-semibold hover:bg-white/90 transition-colors"
+          >
             See how it works
           </a>
-        </motion.div>
+        </div>
       </div>
 
       {/* mini live settlement card */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.3, duration: 0.9, ease }}
-        className="mt-10 w-full max-w-2xl rounded-3xl bg-surface-container-lowest/90 backdrop-blur border border-surface-container shadow-xl p-5 text-left"
-      >
+      <div className="mt-10 w-full max-w-2xl rounded-3xl bg-surface-container-lowest/90 backdrop-blur border border-surface-container shadow-xl p-5 text-left">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-error animate-pulse" />
@@ -124,14 +83,9 @@ export default function Hero() {
         </div>
 
         <div className="h-2.5 rounded-full bg-primary overflow-hidden flex">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: "25%" }}
-            transition={{ delay: 1.9, duration: 1.2, ease }}
-            className="h-full bg-secondary"
-          />
+          <div className="h-full bg-secondary w-1/4 transition-all duration-1000" />
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

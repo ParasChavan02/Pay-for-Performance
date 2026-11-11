@@ -72,10 +72,6 @@ services:
     rootDir: apps/web
     buildCommand: npm install --include=dev && npm run build
     staticPublishPath: ./out
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
     envVars:
       - key: NODE_VERSION
         value: 22.14.0
