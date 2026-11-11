@@ -78,7 +78,7 @@ services:
         destination: /index.html
     envVars:
       - key: NODE_VERSION
-        value: 20.18.0
+        value: 22.14.0
       - key: OUTPUT_EXPORT
         value: "true"
       - key: NEXT_PUBLIC_API_URL
