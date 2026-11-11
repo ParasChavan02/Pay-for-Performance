@@ -7,19 +7,21 @@ services:
     runtime: node
     plan: free
     rootDir: apps/api
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
-        sync: false # Set in Render Dashboard: Atlas connection string
+        sync: false
       - key: FRONTEND_URL
-        sync: false # Set to your p4p-web URL (e.g., https://p4p-web.onrender.com)
+        sync: false
       - key: PAYMENT_SERVICE_URL
-        sync: false # Set to https://p4p-payments.onrender.com/api
+        sync: false
       - key: SLA_SERVICE_URL
-        sync: false # Set to https://p4p-sla-service.onrender.com
+        sync: false
 
   # ============================================================================
   # 2. Payments Service (Node.js PayPal REST API v2 Gateway)
@@ -29,9 +31,11 @@ services:
     runtime: node
     plan: free
     rootDir: apps/payments
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
       - key: NODE_ENV
         value: production
       - key: PAYPAL_CLIENT_ID
@@ -66,14 +70,16 @@ services:
     name: p4p-web
     runtime: static
     rootDir: apps/web
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     staticPublishPath: ./out
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
       - key: OUTPUT_EXPORT
         value: "true"
       - key: NEXT_PUBLIC_API_URL
-        sync: false # Set to https://p4p-api.onrender.com
+        sync: false
