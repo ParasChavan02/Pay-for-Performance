@@ -1,0 +1,68 @@
+services:
+  - type: web
+    name: p4p-api
+    runtime: node
+    plan: free
+    rootDir: apps/api
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: PAYMENT_SERVICE_URL
+        sync: false
+      - key: SLA_SERVICE_URL
+        sync: false
+
+  - type: web
+    name: p4p-payments
+    runtime: node
+    plan: free
+    rootDir: apps/payments
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: PAYPAL_BASE_URL
+        value: https://api-m.sandbox.paypal.com
+
+  - type: web
+    name: p4p-sla-service
+    runtime: python
+    plan: free
+    rootDir: apps/sla-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+
+  - type: web
+    name: p4p-web
+    runtime: static
+    plan: free
+    rootDir: apps/web
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./out
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: OUTPUT_EXPORT
+        value: "true"
+      - key: NEXT_PUBLIC_API_URL
+        sync: false

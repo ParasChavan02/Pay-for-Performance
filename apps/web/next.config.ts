@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: process.env.OUTPUT_EXPORT === "true" ? "export" : undefined,
+  images: {
+    unoptimized: true,
+  },
   experimental: {
     agentFeedback: true,
   },
