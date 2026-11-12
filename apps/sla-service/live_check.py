@@ -8,7 +8,7 @@ from pathlib import Path
 
 from extract import LLMError, extract_sla
 
-SAMPLES = Path(__file__).resolve().parent.parent / "samples"
+SAMPLES = Path(__file__).resolve().parent / "samples"
 
 
 def problems_with(result, expected: dict) -> list[str]:

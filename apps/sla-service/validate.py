@@ -46,9 +46,12 @@ def _check_source(label: str, source: Source, pages: dict[int, str], numbers: tu
 
 
 def _check_hedge(label: str, source: Source, issues: list[str]) -> None:
-    """Catch vague wording in code, even when the LLM reports it as certain."""
+    """Catch vague wording in code, even when the LLM reports it as certain.
+
+    A quote that says "guarantee" is a firm promise even under a heading like "Availability Target:".
+    """
     match = _HEDGE.search(source.quote)
-    if match:
+    if match and not re.search(r"\bguarantee", source.quote, re.IGNORECASE):
         issues.append(f"{label}: vague wording \"{match.group(0)}\" in \"{source.quote}\"")
 
 
