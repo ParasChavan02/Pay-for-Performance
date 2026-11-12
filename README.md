@@ -28,13 +28,13 @@ Pay-for-Performance links the contract to the payment itself. Funds are **author
 
 | Stage | Component | Responsibility |
 |---|---|---|
-| 1. Authorize | Payments service | Create a PayPal order with `intent: AUTHORIZE` and place a hold on the full amount |
-| 2. Extract | SLA service | Parse the contract PDF and extract commitments, credit tiers, caps and exclusions, each with a page number and verbatim quote |
-| 3. Validate | SLA service | Verify every extracted value against the source text in deterministic code; flag anything ambiguous for review |
-| 4. Monitor | Backend API | Record service metrics and detect SLA breaches for the measurement window |
-| 5. Calculate | Backend API | Evaluate credit rules, caps and exclusions in a deterministic policy engine |
-| 6. Approve | Web | An operator reviews the evidence and approves the settlement |
-| 7. Settle | Payments service | Capture the earned amount with `final_capture: true`; PayPal releases the rest |
+| 1.Authorize | Payments service | Create a PayPal order with `intent: AUTHORIZE` and place a hold on the full amount |
+| 2.Extract | SLA service | Parse the contract PDF and extract commitments, credit tiers, caps and exclusions, each with a page number and verbatim quote |
+| 3.Validate | SLA service | Verify every extracted value against the source text in deterministic code; flag anything ambiguous for review |
+| 4.Monitor | Backend API | Record service metrics and detect SLA breaches for the measurement window |
+| 5.Calculate | Backend API | Evaluate credit rules, caps and exclusions in a deterministic policy engine |
+| 6.Approve | Web | An operator reviews the evidence and approves the settlement |
+| 7.Settle | Payments service | Capture the earned amount with `final_capture: true`; PayPal releases the rest |
 
 ### Reference scenario
 
