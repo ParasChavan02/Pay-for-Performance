@@ -76,31 +76,31 @@ export default function ApprovalCard({
   };
 
   return (
-    <div className="rounded-3xl bg-surface-container-lowest border border-surface-container p-6 shadow-sm">
+    <div className="rounded-3xl bg-surface-container-lowest border border-outline-variant/40 p-5 sm:p-6 shadow-sm">
       <h3 className="font-headline font-bold text-lg text-primary mb-1">
         Payment approval
       </h3>
-      <p className="text-sm text-on-surface-variant mb-5">
+      <p className="text-xs sm:text-sm text-on-surface-variant mb-5">
         {settlement.requiresReviewReason ?? "Review the calculated SLA settlement"}
       </p>
 
-      <div className="flex gap-4 mb-6">
-        <div className="flex-1 p-4 rounded-2xl bg-secondary-container/30 text-center">
-          <p className="text-[11px] font-bold uppercase text-secondary">SLA credit</p>
-          <p className="font-headline font-bold text-3xl text-secondary">{credit}</p>
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-5 sm:mb-6">
+        <div className="flex-1 p-3.5 sm:p-4 rounded-2xl bg-secondary-container/20 border border-secondary/20 text-center">
+          <p className="text-[10px] sm:text-[11px] font-bold uppercase text-secondary">SLA credit</p>
+          <p className="font-headline font-bold text-2xl sm:text-3xl text-secondary mt-0.5">{credit}</p>
         </div>
-        <div className="flex-1 p-4 rounded-2xl bg-surface-container text-center">
-          <p className="text-[11px] font-bold uppercase text-on-surface-variant">Capture</p>
-          <p className="font-headline font-bold text-3xl text-primary">{payable}</p>
+        <div className="flex-1 p-3.5 sm:p-4 rounded-2xl bg-surface-container text-center">
+          <p className="text-[10px] sm:text-[11px] font-bold uppercase text-on-surface-variant">Capture</p>
+          <p className="font-headline font-bold text-2xl sm:text-3xl text-primary mt-0.5">{payable}</p>
         </div>
       </div>
 
       {decision === "pending" && (
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
           <button
             onClick={handleApprove}
             disabled={loading}
-            className="flex-1 py-3 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-container transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            className="flex-1 py-3 px-4 rounded-full bg-primary text-on-primary font-bold hover:bg-primary-container transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm text-sm sm:text-base active:scale-95"
           >
             {loading ? (
               <>
@@ -114,7 +114,7 @@ export default function ApprovalCard({
           <button
             onClick={handleReject}
             disabled={loading}
-            className="px-6 py-3 rounded-full border border-outline-variant text-on-surface-variant font-semibold hover:bg-surface-container transition-colors disabled:opacity-50"
+            className="px-6 py-3 rounded-full border border-outline-variant text-on-surface-variant font-semibold hover:bg-surface-container transition-colors disabled:opacity-50 text-sm sm:text-base active:scale-95"
           >
             Reject
           </button>

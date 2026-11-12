@@ -67,25 +67,27 @@ export default function TransactionsPage() {
   }, []);
 
   return (
-    <main className="pt-28 pb-24 px-6 max-w-[1280px] mx-auto">
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="font-headline font-bold text-4xl text-primary">Transactions</h1>
-        <span
-          className={`text-xs font-bold px-3 py-1 rounded-full ${
-            live
-              ? "bg-secondary-container text-secondary"
-              : "bg-surface-container text-on-surface-variant"
-          }`}
-        >
-          {live ? "● Live PayPal Ledger" : "○ Demo Ledger"}
-        </span>
+    <main className="pt-24 sm:pt-28 pb-24 px-4 sm:px-6 max-w-[1280px] mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+        <h1 className="font-headline font-bold text-3xl sm:text-4xl text-primary">Transactions</h1>
+        <div>
+          <span
+            className={`text-xs font-bold px-3 py-1 rounded-full ${
+              live
+                ? "bg-secondary-container/30 text-secondary border border-secondary/30"
+                : "bg-surface-container text-on-surface-variant border border-outline-variant/30"
+            }`}
+          >
+            {live ? "● Live PayPal Ledger" : "○ Demo Ledger"}
+          </span>
+        </div>
       </div>
-      <p className="text-on-surface-variant mt-1 mb-8">
+      <p className="text-sm sm:text-base text-on-surface-variant mt-1 mb-6 sm:mb-8">
         Every PayPal action and ledger entry for SLA settlements.
       </p>
       <div
-        style={{ height: 380, width: "100%" }}
-        className="rounded-3xl overflow-hidden border border-surface-container"
+        style={{ height: 420, width: "100%" }}
+        className="rounded-2xl sm:rounded-3xl overflow-hidden border border-outline-variant/40 shadow-sm"
       >
         <AgGridReact rowData={rows} columnDefs={columns} />
       </div>

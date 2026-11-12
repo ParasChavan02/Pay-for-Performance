@@ -70,9 +70,9 @@ export default function UploadPage() {
   };
 
   return (
-    <main className="pt-28 pb-24 px-6 max-w-3xl mx-auto">
-      <h1 className="font-headline font-bold text-4xl text-primary">Upload SLA</h1>
-      <p className="text-on-surface-variant mt-1 mb-8">
+    <main className="pt-24 sm:pt-28 pb-24 px-4 sm:px-6 max-w-3xl mx-auto">
+      <h1 className="font-headline font-bold text-3xl sm:text-4xl text-primary">Upload SLA</h1>
+      <p className="text-sm sm:text-base text-on-surface-variant mt-1 mb-6 sm:mb-8">
         Drop a contract and measurable promises are extracted by Groq AI.
       </p>
 
@@ -89,17 +89,17 @@ export default function UploadPage() {
             const f = e.dataTransfer.files?.[0];
             if (f) handleFile(f);
           }}
-          className={`flex flex-col items-center justify-center gap-3 h-72 rounded-3xl border-2 border-dashed cursor-pointer transition-colors ${
+          className={`flex flex-col items-center justify-center gap-3 h-60 sm:h-72 px-4 rounded-3xl border-2 border-dashed cursor-pointer transition-colors text-center ${
             dragging
-              ? "border-primary bg-surface-container"
-              : "border-outline-variant bg-surface-container-lowest"
+              ? "border-primary bg-primary/10"
+              : "border-outline-variant bg-surface-container-lowest hover:border-primary/60"
           }`}
         >
           <UploadCloud size={40} className="text-primary" />
-          <p className="font-headline font-bold text-xl text-primary">
+          <p className="font-headline font-bold text-lg sm:text-xl text-primary">
             Drop your SLA PDF here
           </p>
-          <p className="text-sm text-on-surface-variant">or click to browse</p>
+          <p className="text-xs sm:text-sm text-on-surface-variant">or tap to browse files</p>
           <input
             type="file"
             accept="application/pdf"
@@ -112,7 +112,7 @@ export default function UploadPage() {
       )}
 
       {stage === "idle" && (
-        <div className="mt-4 flex items-center justify-between text-xs text-on-surface-variant px-2">
+        <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-on-surface-variant px-2">
           <span>Need a sample file to test?</span>
           <button
             type="button"
@@ -130,18 +130,18 @@ export default function UploadPage() {
             }}
             className="text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
           >
-            ⚡ Click to auto-load demo SLA contract
+            ⚡ Tap to auto-load demo SLA contract
           </button>
         </div>
       )}
 
       {stage === "parsing" && (
-        <div className="flex flex-col items-center justify-center gap-4 h-72 rounded-3xl bg-surface-container-lowest border border-surface-container">
+        <div className="flex flex-col items-center justify-center gap-4 h-60 sm:h-72 rounded-3xl bg-surface-container-lowest border border-outline-variant/50 px-4 text-center">
           <Loader2 size={40} className="text-primary animate-spin" />
-          <p className="font-headline font-bold text-xl text-primary">
+          <p className="font-headline font-bold text-lg sm:text-xl text-primary">
             Reading {file?.name}
           </p>
-          <p className="text-sm text-on-surface-variant">
+          <p className="text-xs sm:text-sm text-on-surface-variant">
             Extracting promises via Groq AI &amp; PDFPlumber
           </p>
         </div>
@@ -149,35 +149,35 @@ export default function UploadPage() {
 
       {stage === "done" && (
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="rounded-3xl bg-surface-container-lowest border border-surface-container p-8 shadow-sm"
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="rounded-3xl bg-surface-container-lowest border border-outline-variant/50 p-5 sm:p-8 shadow-sm"
         >
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex flex-wrap items-center gap-3 mb-6">
             <FileText className="text-primary" />
-            <p className="font-semibold text-primary">{file?.name}</p>
-            <span className="ml-auto flex items-center gap-1 text-secondary font-bold text-sm">
+            <p className="font-semibold text-primary truncate max-w-[200px] sm:max-w-md">{file?.name}</p>
+            <span className="ml-auto flex items-center gap-1 text-secondary font-bold text-xs sm:text-sm">
               <CheckCircle2 size={18} /> {aiVerified ? "AI Extracted" : "Parsed"}
             </span>
           </div>
 
-          <div className="space-y-3 mb-8">
+          <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
             {extracted.map((e) => (
               <div
                 key={e.label}
-                className="flex justify-between gap-4 p-4 rounded-2xl bg-surface-container-low"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-surface-container-low border border-outline-variant/30"
               >
-                <span className="text-on-surface-variant">{e.label}</span>
-                <span className="font-bold text-primary text-right">{e.value}</span>
+                <span className="text-xs sm:text-sm text-on-surface-variant">{e.label}</span>
+                <span className="font-bold text-primary sm:text-right text-sm sm:text-base">{e.value}</span>
               </div>
             ))}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Link
               href="/dashboard"
-              className="flex-1 text-center py-3 rounded-full bg-primary text-on-primary font-semibold hover:bg-primary-container transition-colors"
+              className="flex-1 text-center py-3 px-4 rounded-full bg-primary text-on-primary font-bold hover:bg-primary-container transition-colors shadow-sm text-sm sm:text-base active:scale-95"
             >
               Start monitoring
             </Link>
@@ -186,7 +186,7 @@ export default function UploadPage() {
                 setFile(null);
                 setStage("idle");
               }}
-              className="px-6 py-3 rounded-full border border-outline-variant text-on-surface-variant font-semibold hover:bg-surface-container transition-colors"
+              className="px-6 py-3 rounded-full border border-outline-variant text-on-surface-variant font-semibold hover:bg-surface-container transition-colors text-sm sm:text-base active:scale-95"
             >
               Upload another
             </button>

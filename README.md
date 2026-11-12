@@ -12,10 +12,10 @@ Pay-for-Performance is an AI-powered SLA-based payment settlement platform that 
 pay-for-performance/
 │
 ├── apps/
-│   ├── web/                     # Person 4: Next.js 16 (App Router), Tailwind CSS v4, AG-Grid
-│   ├── api/                     # Person 3: Express, TypeScript, Mongoose 8, Policy & Monitoring Hub
-│   ├── payments/                # Person 1: PayPal REST API v2 Integration (Authorize, Capture, Refund)
-│   └── sla-service/             # Person 2: Python FastAPI, Groq LLM (llama-3.3/gpt-oss), PDFPlumber
+│   ├── web/                     # Harsika: Next.js 16 (App Router), Tailwind CSS v4, AG-Grid
+│   ├── api/                     # Manas: Express, TypeScript, Mongoose 8, Policy & Monitoring Hub
+│   ├── payments/                # Paras: PayPal REST API v2 Integration (Authorize, Capture, Refund)
+│   └── sla-service/             # Tanmay: Python FastAPI, Groq LLM (llama-3.3/gpt-oss), PDFPlumber
 │
 ├── packages/
 │   ├── contracts/               # Shared TypeScript domain contracts & DTOs

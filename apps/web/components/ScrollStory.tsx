@@ -81,13 +81,6 @@ export default function ScrollStory() {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
 
-  // whole section changes mood: calm -> red outage -> calm -> green settled
-  const bg = useTransform(
-    p,
-    [0, 0.3, 0.38, 0.5, 0.6, 0.85, 0.95],
-    ["#f9f9ff", "#f9f9ff", "#ffdad6", "#ffdad6", "#f9f9ff", "#f9f9ff", "#e3f8ea"]
-  );
-
   // cash 1: buyer -> PayPal, then waits (held)
   const cashLeft = useTransform(p, [0.02, 0.14], ["12%", "50%"]);
   const cashOpacity = useTransform(p, [0, 0.03, 0.82, 0.85], [0, 1, 1, 0]);
@@ -99,29 +92,29 @@ export default function ScrollStory() {
   const vendorLeft = useTransform(p, [0.86, 0.97], ["50%", "88%"]);
 
   return (
-    <div ref={ref} className="h-[500vh] relative">
-      <motion.div style={{ backgroundColor: bg }} className="sticky top-0 h-screen pt-20 flex items-center">
-        <div className="w-full max-w-[1280px] mx-auto px-6 grid lg:grid-cols-2 gap-10 items-center">
+    <div ref={ref} className="h-[450vh] sm:h-[500vh] relative">
+      <div className="sticky top-0 min-h-screen pt-20 pb-8 flex items-center bg-background/90 transition-colors">
+        <div className="w-full max-w-[1280px] mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-8 lg:gap-10 items-center">
           {/* left: captions */}
           <div>
-            <div className="relative h-52">
+            <div className="relative h-44 sm:h-52">
               {scenes.map((s) => (
                 <Scene key={s.title} p={p} range={s.range} className="flex flex-col justify-center">
-                  <p className="text-sm font-bold uppercase text-secondary mb-2">{s.tag}</p>
-                  <h2 className="font-headline font-bold text-4xl md:text-5xl text-primary tracking-tight">{s.title}</h2>
-                  <p className="text-lg text-on-surface-variant mt-3 max-w-md">{s.text}</p>
+                  <p className="text-xs sm:text-sm font-bold uppercase text-secondary mb-2">{s.tag}</p>
+                  <h2 className="font-headline font-bold text-2xl sm:text-4xl md:text-5xl text-primary tracking-tight">{s.title}</h2>
+                  <p className="text-sm sm:text-lg text-on-surface-variant mt-2 sm:mt-3 max-w-md">{s.text}</p>
                 </Scene>
               ))}
             </div>
-            <div className="mt-8 h-1.5 rounded-full bg-surface-container-highest overflow-hidden">
+            <div className="mt-6 sm:mt-8 h-1.5 rounded-full bg-surface-container overflow-hidden">
               <motion.div style={{ scaleX: p }} className="h-full origin-left bg-secondary" />
             </div>
           </div>
 
           {/* right: the animated stage */}
-          <div className="relative h-[420px] lg:h-[480px] rounded-3xl bg-surface-container-lowest border border-surface-container shadow-xl overflow-hidden">
+          <div className="relative h-[380px] sm:h-[440px] lg:h-[480px] rounded-3xl bg-surface-container-lowest border border-outline-variant/50 shadow-2xl overflow-hidden">
             {/* top area: what is happening now */}
-            <div className="absolute left-4 right-4 top-4 bottom-[46%]">
+            <div className="absolute left-3 right-3 sm:left-4 sm:right-4 top-4 bottom-[46%]">
               <Scene p={p} range={scenes[0].range}>
                 <div className="h-full flex flex-col items-center justify-center text-center">
                   <p className="text-xs font-bold uppercase text-on-surface-variant">PayPal order</p>
@@ -201,12 +194,12 @@ export default function ScrollStory() {
             </div>
 
             <div className="absolute bottom-5 flex flex-col items-center -translate-x-1/2" style={{ left: "50%" }}>
-              <div className="px-4 py-3 rounded-2xl bg-white shadow-md border border-surface-container flex flex-col items-center">
-                <span className="font-extrabold italic text-lg">
-                  <span className="text-[#003087]">Pay</span>
-                  <span className="text-[#009cde]">Pal</span>
+              <div className="px-3.5 py-2.5 sm:px-4 sm:py-3 rounded-2xl bg-surface-container-low dark:bg-zinc-900 shadow-md border border-outline-variant/60 dark:border-zinc-800 flex flex-col items-center">
+                <span className="font-extrabold italic text-base sm:text-lg">
+                  <span className="text-[#003087] dark:text-[#38bdf8]">Pay</span>
+                  <span className="text-[#009cde] dark:text-[#60a5fa]">Pal</span>
                 </span>
-                <motion.span style={{ opacity: lockOpacity }} className="text-xs font-bold text-secondary">🔒 held</motion.span>
+                <motion.span style={{ opacity: lockOpacity }} className="text-[11px] sm:text-xs font-bold text-secondary">🔒 held</motion.span>
               </div>
             </div>
 
@@ -216,7 +209,7 @@ export default function ScrollStory() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
