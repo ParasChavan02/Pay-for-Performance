@@ -2,25 +2,84 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
-import { UploadCloud, FileText, Loader2, CheckCircle2 } from "lucide-react";
+import { UploadCloud, FileText, Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 
-const DEFAULT_EXTRACTED = [
+type Source = { page: number; quote: string };
+type Row = { label: string; value: string; source?: Source | null };
+
+// The shape POST /api/sla/extract returns (apps/sla-service/schema.py).
+type SlaResult = {
+  provider: string | null;
+  service: string | null;
+  measurement_period: string | null;
+  timezone: string | null;
+  commitments: { id: string; metric: string; operator: string; threshold: number; source: Source }[];
+  credit_rules: { commitment_id: string; if_below: number | null; if_above: number | null; credit_percent: number; source: Source }[];
+  credit_cap_percent: number | null;
+  credit_cap_source: Source | null;
+  exclusions: { type: string; max_hours_per_month: number | null; source: Source }[];
+  validation: { status: "ok" | "needs_review"; issues: string[] };
+};
+
+// Shown only when the AI service can't be reached, and labelled as samples.
+const SAMPLE_TERMS: Row[] = [
   { label: "Uptime guarantee", value: "99.9%" },
   { label: "Latency target (p95)", value: "300 ms" },
   { label: "Measurement window", value: "Monthly" },
   { label: "Credit formula", value: "25% of fee when uptime is below 99.9%" },
 ];
 
+const METRIC_LABELS: Record<string, [string, string]> = {
+  uptime_percent: ["Uptime guarantee", "%"],
+  p95_latency_ms: ["Latency target (p95)", " ms"],
+};
+
+function toRows(sla: SlaResult): Row[] {
+  const rows: Row[] = [];
+  if (sla.provider) rows.push({ label: "Provider", value: [sla.provider, sla.service].filter(Boolean).join(" · ") });
+  for (const c of sla.commitments) {
+    const [label, unit] = METRIC_LABELS[c.metric] ?? [c.metric, ""];
+    rows.push({ label, value: `${c.operator} ${c.threshold}${unit}`, source: c.source });
+  }
+  const unitOf = (id: string) => METRIC_LABELS[sla.commitments.find((c) => c.id === id)?.metric ?? ""]?.[1] ?? "";
+  for (const r of sla.credit_rules) {
+    const unit = unitOf(r.commitment_id);
+    const when = r.if_below !== null ? `below ${r.if_below}${unit}` : `above ${r.if_above}${unit}`;
+    rows.push({ label: `Credit if ${when}`, value: `${r.credit_percent}% of fee`, source: r.source });
+  }
+  rows.push({
+    label: "Credit cap",
+    value: sla.credit_cap_percent !== null ? `${sla.credit_cap_percent}% of fee` : "Not stated",
+    source: sla.credit_cap_source,
+  });
+  rows.push({
+    label: "Measurement window",
+    value: [sla.measurement_period, sla.timezone].filter(Boolean).join(", ") || "Not stated",
+  });
+  for (const e of sla.exclusions) {
+    rows.push({
+      label: `Excluded: ${e.type.replace(/_/g, " ")}`,
+      value: e.max_hours_per_month !== null ? `up to ${e.max_hours_per_month} h/month` : "No limit",
+      source: e.source,
+    });
+  }
+  return rows;
+}
+
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [stage, setStage] = useState<"idle" | "parsing" | "done">("idle");
   const [dragging, setDragging] = useState(false);
-  const [extracted, setExtracted] = useState(DEFAULT_EXTRACTED);
-  const [aiVerified, setAiVerified] = useState(false);
+  const [rows, setRows] = useState<Row[]>(SAMPLE_TERMS);
+  const [result, setResult] = useState<SlaResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFile = async (f: File) => {
     setFile(f);
     setStage("parsing");
+    setResult(null);
+    setError(null);
+    setRows(SAMPLE_TERMS);
     try {
       const formData = new FormData();
       formData.append("file", f);
@@ -29,45 +88,32 @@ export default function UploadPage() {
         method: "POST",
         body: formData,
       });
-
-      if (res.ok) {
-        const data = await res.json();
-        const terms = data?.terms || data?.data?.terms;
-        if (terms) {
-          setExtracted([
-            {
-              label: "Uptime guarantee",
-              value: terms.uptime_threshold_pct
-                ? `${terms.uptime_threshold_pct}%`
-                : "99.9%",
-            },
-            {
-              label: "Latency target (p95)",
-              value: terms.latency_threshold_ms
-                ? `${terms.latency_threshold_ms} ms`
-                : "300 ms",
-            },
-            {
-              label: "Measurement window",
-              value: terms.measurement_window ?? "Monthly",
-            },
-            {
-              label: "Credit formula",
-              value: terms.credit_rate
-                ? `${terms.credit_rate}% credit per breach`
-                : "25% credit when uptime breaches contract",
-            },
-          ]);
-          setAiVerified(true);
-        }
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.validation) {
+        setResult(data as SlaResult);
+        setRows(toRows(data as SlaResult));
+      } else {
+        setError(data?.detail || data?.message || `AI service returned ${res.status}`);
       }
     } catch (err: any) {
-      console.warn("AI extraction using baseline terms:", err.message);
+      setError(err.message);
     } finally {
       // Smooth visual feedback
-      setTimeout(() => setStage("done"), 1200);
+      setTimeout(() => setStage("done"), 600);
     }
   };
+
+  const loadSample = async (path: string, name: string) => {
+    try {
+      const res = await fetch(path);
+      const blob = await res.blob();
+      handleFile(new File([blob], name, { type: "application/pdf" }));
+    } catch (e) {
+      console.warn("Could not load sample PDF", e);
+    }
+  };
+
+  const needsReview = result?.validation.status === "needs_review";
 
   return (
     <main className="pt-24 sm:pt-28 pb-24 px-4 sm:px-6 max-w-3xl mx-auto">
@@ -114,24 +160,22 @@ export default function UploadPage() {
       {stage === "idle" && (
         <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-on-surface-variant px-2">
           <span>Need a sample file to test?</span>
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                const res = await fetch("/sample_sla_contract.pdf");
-                const blob = await res.blob();
-                const f = new File([blob], "pay_for_performance_demo_sla.pdf", {
-                  type: "application/pdf",
-                });
-                handleFile(f);
-              } catch (e) {
-                console.warn("Could not load sample PDF", e);
-              }
-            }}
-            className="text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
-          >
-            ⚡ Tap to auto-load demo SLA contract
-          </button>
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+            <button
+              type="button"
+              onClick={() => loadSample("/demo_tiered_sla.pdf", "nimbus_tiered_sla.pdf")}
+              className="text-primary hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+            >
+              ⚡ Tap to auto-load demo SLA contract
+            </button>
+            <button
+              type="button"
+              onClick={() => loadSample("/demo_vague_sla.pdf", "cirrus_vague_sla.pdf")}
+              className="text-on-surface-variant hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+            >
+              Try a vague contract
+            </button>
+          </div>
         </div>
       )}
 
@@ -157,19 +201,57 @@ export default function UploadPage() {
           <div className="flex flex-wrap items-center gap-3 mb-6">
             <FileText className="text-primary" />
             <p className="font-semibold text-primary truncate max-w-[200px] sm:max-w-md">{file?.name}</p>
-            <span className="ml-auto flex items-center gap-1 text-secondary font-bold text-xs sm:text-sm">
-              <CheckCircle2 size={18} /> {aiVerified ? "AI Extracted" : "Parsed"}
-            </span>
+            {result && !needsReview && (
+              <span className="ml-auto flex items-center gap-1 text-secondary font-bold text-xs sm:text-sm">
+                <CheckCircle2 size={18} /> AI Extracted · all checks passed
+              </span>
+            )}
+            {needsReview && (
+              <span className="ml-auto flex items-center gap-1 text-error font-bold text-xs sm:text-sm">
+                <AlertTriangle size={18} /> Needs human review
+              </span>
+            )}
+            {!result && (
+              <span className="ml-auto flex items-center gap-1 text-on-surface-variant font-bold text-xs sm:text-sm">
+                <AlertTriangle size={18} /> Sample terms (AI unavailable)
+              </span>
+            )}
           </div>
 
+          {needsReview && (
+            <div className="mb-6 p-4 rounded-2xl border border-error/40 bg-error-container/30">
+              <p className="font-semibold text-error text-sm mb-2">
+                {result!.validation.issues.length} issue(s) found. Money won&apos;t move on this contract until a person checks it.
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-xs sm:text-sm text-on-surface">
+                {result!.validation.issues.map((issue) => (
+                  <li key={issue}>{issue}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {error && (
+            <p className="mb-6 text-xs sm:text-sm text-on-surface-variant">
+              Couldn&apos;t reach the AI service ({error}). The values below are samples, not read from your file.
+            </p>
+          )}
+
           <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
-            {extracted.map((e) => (
+            {rows.map((e, i) => (
               <div
-                key={e.label}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 p-3 sm:p-4 rounded-2xl bg-surface-container-low border border-outline-variant/30"
+                key={`${e.label}-${i}`}
+                className="p-3 sm:p-4 rounded-2xl bg-surface-container-low border border-outline-variant/30"
               >
-                <span className="text-xs sm:text-sm text-on-surface-variant">{e.label}</span>
-                <span className="font-bold text-primary sm:text-right text-sm sm:text-base">{e.value}</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4">
+                  <span className="text-xs sm:text-sm text-on-surface-variant">{e.label}</span>
+                  <span className="font-bold text-primary sm:text-right text-sm sm:text-base">{e.value}</span>
+                </div>
+                {e.source && (
+                  <p className="mt-1.5 text-[11px] sm:text-xs text-on-surface-variant italic">
+                    p.{e.source.page}: &ldquo;{e.source.quote}&rdquo;
+                  </p>
+                )}
               </div>
             ))}
           </div>

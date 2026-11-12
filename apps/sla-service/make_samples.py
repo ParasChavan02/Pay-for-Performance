@@ -1,4 +1,4 @@
-"""Generate the fake SLA PDFs in /samples. Run: python make_samples.py
+"""Generate the fake SLA PDFs in samples/ next to this file. Run: python make_samples.py
 
 All companies here are made up. Each page is a list of paragraphs or table rows.
 """
@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-OUT = Path(__file__).resolve().parent.parent / "samples"
+OUT = Path(__file__).resolve().parent / "samples"
 
 CLEAN = [
     [

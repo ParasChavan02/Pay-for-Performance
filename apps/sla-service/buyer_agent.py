@@ -24,7 +24,7 @@ from to_contract import to_contract_payload
 
 load_dotenv()
 HERE = Path(__file__).resolve().parent
-SAMPLES = HERE.parent / "samples"
+SAMPLES = HERE / "samples"
 PAYMENTS_API = os.environ.get("PAYMENTS_API_URL", "http://localhost:3000/api")
 BACKEND_API = os.environ.get("BACKEND_API_URL", "http://localhost:5000/api")
 

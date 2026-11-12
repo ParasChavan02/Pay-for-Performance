@@ -326,3 +326,12 @@ def test_target_is_not_a_guarantee():
 def test_caps_and_exclusions_may_say_up_to(pages):
     """'up to 2 hours' is a normal exclusion limit, so it must not be flagged as vague."""
     assert validate(good(), pages).status == "ok"
+
+
+def test_a_guarantee_under_a_target_heading_is_not_vague():
+    """Seen live in the website's demo PDF: the heading said "Target" but the sentence guarantees."""
+    quote = "Availability Target: Provider guarantees a Monthly Uptime Percentage of at least 99.9%"
+    data = good()
+    data.commitments = [data.commitments[0].model_copy(update={"source": Source(page=1, quote=quote)})]
+    data.credit_rules = []
+    assert not any("vague wording" in issue for issue in validate(data, {1: quote}).issues)
