@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import http from 'http';
+import https from 'https';
 import { env } from '../config/env';
 import { databaseStatus } from '../config/database';
 import services from '../modules/services/service.routes';
@@ -39,7 +40,9 @@ router.post('/sla/extract', (req, res) => {
   const url = new URL(`${env.SLA_SERVICE_URL}/sla/extract`);
   const headers = { ...req.headers, host: url.host };
 
-  const proxyReq = http.request(
+  // The deployed SLA service is https; plain http gets a redirect that the browser can't follow.
+  const client = url.protocol === 'https:' ? https : http;
+  const proxyReq = client.request(
     {
       hostname: url.hostname,
       port: url.port,
